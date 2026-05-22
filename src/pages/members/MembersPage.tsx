@@ -1,7 +1,7 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useDeferredValue } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
-  useReactTable, getCoreRowModel, getFilteredRowModel, getPaginationRowModel,
+  useReactTable, getCoreRowModel, getPaginationRowModel,
   getSortedRowModel, flexRender, type ColumnDef, type SortingState,
 } from '@tanstack/react-table'
 import { toast } from 'sonner'
@@ -27,6 +27,7 @@ import type { Member, MemberStatus } from '@/types'
 export function MembersPage() {
   const queryClient = useQueryClient()
   const [globalFilter, setGlobalFilter] = useState('')
+  const deferredGlobalFilter = useDeferredValue(globalFilter)
   const [statusFilter, setStatusFilter] = useState<MemberStatus | 'all'>('all')
   const [sorting, setSorting] = useState<SortingState>([])
   const [rowSelection, setRowSelection] = useState({})
@@ -35,8 +36,8 @@ export function MembersPage() {
   const [deleteId, setDeleteId] = useState<string | null>(null)
 
   const { data, isLoading } = useQuery({
-    queryKey: ['members', { status: statusFilter, search: globalFilter }],
-    queryFn: () => membersService.getMembers({ status: statusFilter, search: globalFilter, limit: 200 }),
+    queryKey: ['members', { status: statusFilter, search: deferredGlobalFilter }],
+    queryFn: () => membersService.getMembers({ status: statusFilter, search: deferredGlobalFilter, limit: 200 }),
   })
 
   const deleteMutation = useMutation({
@@ -180,12 +181,10 @@ export function MembersPage() {
   const table = useReactTable({
     data: data?.data ?? [],
     columns,
-    state: { globalFilter, sorting, rowSelection },
-    onGlobalFilterChange: setGlobalFilter,
+    state: { sorting, rowSelection },
     onSortingChange: setSorting,
     onRowSelectionChange: setRowSelection,
     getCoreRowModel: getCoreRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
   })

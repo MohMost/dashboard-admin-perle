@@ -1,7 +1,7 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useDeferredValue } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
-  useReactTable, getCoreRowModel, getFilteredRowModel, getPaginationRowModel,
+  useReactTable, getCoreRowModel, getPaginationRowModel,
   flexRender, type ColumnDef,
 } from '@tanstack/react-table'
 import { toast } from 'sonner'
@@ -27,6 +27,7 @@ import type { AdminUser, UserRole, UserStatus } from '@/types'
 export function UsersPage() {
   const queryClient = useQueryClient()
   const [search, setSearch] = useState('')
+  const deferredSearch = useDeferredValue(search)
   const [roleFilter, setRoleFilter] = useState<UserRole | 'all'>('all')
   const [statusFilter, setStatusFilter] = useState<UserStatus | 'all'>('all')
   const [formOpen, setFormOpen] = useState(false)
@@ -34,8 +35,8 @@ export function UsersPage() {
   const [deleteId, setDeleteId] = useState<string | null>(null)
 
   const { data, isLoading } = useQuery({
-    queryKey: ['users', { search, role: roleFilter, status: statusFilter }],
-    queryFn: () => usersService.getUsers({ search, role: roleFilter, status: statusFilter, limit: 100 }),
+    queryKey: ['users', { search: deferredSearch, role: roleFilter, status: statusFilter }],
+    queryFn: () => usersService.getUsers({ search: deferredSearch, role: roleFilter, status: statusFilter, limit: 100 }),
   })
 
   const deleteMutation = useMutation({
@@ -129,10 +130,7 @@ export function UsersPage() {
   const table = useReactTable({
     data: data?.data ?? [],
     columns,
-    state: { globalFilter: search },
-    onGlobalFilterChange: setSearch,
     getCoreRowModel: getCoreRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
   })
 

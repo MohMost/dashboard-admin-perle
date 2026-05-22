@@ -1,7 +1,7 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useDeferredValue } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
-  useReactTable, getCoreRowModel, getFilteredRowModel, getPaginationRowModel,
+  useReactTable, getCoreRowModel, getPaginationRowModel,
   getSortedRowModel, flexRender, type ColumnDef, type SortingState,
 } from '@tanstack/react-table'
 import { toast } from 'sonner'
@@ -26,6 +26,7 @@ import type { ContentItem, ContentStatus, ContentType } from '@/types'
 export function ContentPage() {
   const queryClient = useQueryClient()
   const [search, setSearch] = useState('')
+  const deferredSearch = useDeferredValue(search)
   const [statusFilter, setStatusFilter] = useState<ContentStatus | 'all'>('all')
   const [typeFilter, setTypeFilter] = useState<ContentType | 'all'>('all')
   const [sorting, setSorting] = useState<SortingState>([])
@@ -34,8 +35,8 @@ export function ContentPage() {
   const [deleteId, setDeleteId] = useState<string | null>(null)
 
   const { data, isLoading } = useQuery({
-    queryKey: ['content', { search, status: statusFilter, type: typeFilter }],
-    queryFn: () => contentService.getContent({ search, status: statusFilter, type: typeFilter, limit: 200 }),
+    queryKey: ['content', { search: deferredSearch, status: statusFilter, type: typeFilter }],
+    queryFn: () => contentService.getContent({ search: deferredSearch, status: statusFilter, type: typeFilter, limit: 200 }),
   })
 
   const deleteMutation = useMutation({
@@ -147,11 +148,9 @@ export function ContentPage() {
   const table = useReactTable({
     data: data?.data ?? [],
     columns,
-    state: { globalFilter: search, sorting },
-    onGlobalFilterChange: setSearch,
+    state: { sorting },
     onSortingChange: setSorting,
     getCoreRowModel: getCoreRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
   })
