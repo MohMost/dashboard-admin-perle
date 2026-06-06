@@ -1,182 +1,288 @@
-import { useState, useMemo, useDeferredValue } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useState, useMemo, useDeferredValue } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
-  useReactTable, getCoreRowModel, getPaginationRowModel,
-  getSortedRowModel, flexRender, type ColumnDef, type SortingState,
-} from '@tanstack/react-table'
-import { toast } from 'sonner'
-import { Plus, Search, Download, RefreshCw, MoreHorizontal, Copy, Mail, Ban, CheckCircle, Trash2, Filter } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
-import { Checkbox } from '@/components/ui/checkbox'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { Card, CardContent } from '@/components/ui/card'
-import { Skeleton } from '@/components/ui/skeleton'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { membersService } from '@/services/members.service'
-import { StatusBadge } from '@/components/shared/StatusBadge'
-import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
-import { DataTablePagination } from '@/components/shared/DataTablePagination'
-import { MemberFormDialog } from './MemberFormDialog'
-import { formatDate, getInitials, exportToCSV } from '@/lib/utils'
-import type { Member, MemberStatus } from '@/types'
+  useReactTable,
+  getCoreRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  flexRender,
+  type ColumnDef,
+  type SortingState,
+} from "@tanstack/react-table";
+import { toast } from "sonner";
+import {
+  Plus,
+  Search,
+  Download,
+  RefreshCw,
+  MoreHorizontal,
+  Copy,
+  Mail,
+  Ban,
+  CheckCircle,
+  Trash2,
+  Filter,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { membersService } from "@/services/members.service";
+import { StatusBadge } from "@/components/shared/StatusBadge";
+import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
+import { DataTablePagination } from "@/components/shared/DataTablePagination";
+import { MemberFormDialog } from "./MemberFormDialog";
+import { formatDate, getInitials, exportToCSV } from "@/lib/utils";
+import type { Member, MemberStatus } from "@/types";
 
 export function MembersPage() {
-  const queryClient = useQueryClient()
-  const [globalFilter, setGlobalFilter] = useState('')
-  const deferredGlobalFilter = useDeferredValue(globalFilter)
-  const [statusFilter, setStatusFilter] = useState<MemberStatus | 'all'>('all')
-  const [sorting, setSorting] = useState<SortingState>([])
-  const [rowSelection, setRowSelection] = useState({})
-  const [formOpen, setFormOpen] = useState(false)
-  const [editMember, setEditMember] = useState<Member | null>(null)
-  const [deleteId, setDeleteId] = useState<string | null>(null)
+  const queryClient = useQueryClient();
+  const [globalFilter, setGlobalFilter] = useState("");
+  const deferredGlobalFilter = useDeferredValue(globalFilter);
+  const [statusFilter, setStatusFilter] = useState<MemberStatus | "active">(
+    "active",
+  );
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [rowSelection, setRowSelection] = useState({});
+  const [formOpen, setFormOpen] = useState(false);
+  const [editMember, setEditMember] = useState<Member | null>(null);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
 
   const { data, isLoading } = useQuery({
-    queryKey: ['members', { status: statusFilter, search: deferredGlobalFilter }],
-    queryFn: () => membersService.getMembers({ status: statusFilter, search: deferredGlobalFilter, limit: 200 }),
-  })
+    queryKey: [
+      "members",
+      { status: statusFilter, search: deferredGlobalFilter },
+    ],
+    queryFn: () =>
+      membersService.getMembers({
+        status: statusFilter,
+        search: deferredGlobalFilter,
+        limit: 200,
+      }),
+  });
 
   const deleteMutation = useMutation({
     mutationFn: membersService.deleteMember,
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['members'] }); toast.success('Membre supprimé') },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["members"] });
+      toast.success("Membre supprimé");
+    },
     onError: (e: Error) => toast.error(e.message),
-  })
+  });
 
   const suspendMutation = useMutation({
     mutationFn: membersService.suspendMember,
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['members'] }); toast.success('Membre suspendu') },
-  })
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["members"] });
+      toast.success("Membre suspendu");
+    },
+  });
 
   const activateMutation = useMutation({
     mutationFn: membersService.activateMember,
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['members'] }); toast.success('Membre activé') },
-  })
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["members"] });
+      toast.success("Membre activé");
+    },
+  });
 
   const regenMutation = useMutation({
     mutationFn: membersService.regenerateCode,
     onSuccess: (m) => {
-      queryClient.invalidateQueries({ queryKey: ['members'] })
-      navigator.clipboard.writeText(m.accessCode)
-      toast.success(`Code régénéré : ${m.accessCode} (copié)`)
+      queryClient.invalidateQueries({ queryKey: ["members"] });
+      navigator.clipboard.writeText(m.accessCode);
+      toast.success(`Code régénéré : ${m.accessCode} (copié)`);
     },
-  })
+  });
 
   const bulkDeleteMutation = useMutation({
     mutationFn: membersService.bulkDelete,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['members'] })
-      setRowSelection({})
-      toast.success('Membres supprimés')
+      queryClient.invalidateQueries({ queryKey: ["members"] });
+      setRowSelection({});
+      toast.success("Membres supprimés");
     },
-  })
+  });
 
-  const columns = useMemo<ColumnDef<Member>[]>(() => [
-    {
-      id: 'select',
-      header: ({ table }) => (
-        <Checkbox
-          checked={table.getIsAllPageRowsSelected()}
-          onCheckedChange={v => table.toggleAllPageRowsSelected(!!v)}
-        />
-      ),
-      cell: ({ row }) => (
-        <Checkbox checked={row.getIsSelected()} onCheckedChange={v => row.toggleSelected(!!v)} />
-      ),
-      enableSorting: false, enableHiding: false,
-    },
-    {
-      accessorKey: 'name',
-      header: 'Membre',
-      cell: ({ row: { original: m } }) => (
-        <div className="flex items-center gap-3">
-          <Avatar className="h-8 w-8">
-            <AvatarFallback className="text-xs">{getInitials(m.firstName, m.lastName)}</AvatarFallback>
-          </Avatar>
-          <div>
-            <p className="font-medium text-sm">{m.firstName} {m.lastName}</p>
-            <p className="text-xs text-muted-foreground">{m.email}</p>
+  const columns = useMemo<ColumnDef<Member>[]>(
+    () => [
+      {
+        id: "select",
+        header: ({ table }) => (
+          <Checkbox
+            checked={table.getIsAllPageRowsSelected()}
+            onCheckedChange={(v) => table.toggleAllPageRowsSelected(!!v)}
+          />
+        ),
+        cell: ({ row }) => (
+          <Checkbox
+            checked={row.getIsSelected()}
+            onCheckedChange={(v) => row.toggleSelected(!!v)}
+          />
+        ),
+        enableSorting: false,
+        enableHiding: false,
+      },
+      {
+        accessorKey: "name",
+        header: "Membre",
+        cell: ({ row: { original: m } }) => (
+          <div className="flex items-center gap-3">
+            <Avatar className="h-8 w-8">
+              <AvatarFallback className="text-xs">
+                {getInitials(m.firstName, m.lastName)}
+              </AvatarFallback>
+            </Avatar>
+            <div>
+              <p className="font-medium text-sm">
+                {m.firstName} {m.lastName}
+              </p>
+              <p className="text-xs text-muted-foreground">{m.email}</p>
+            </div>
           </div>
-        </div>
-      ),
-    },
-    {
-      accessorKey: 'status',
-      header: 'Statut',
-      cell: ({ row }) => <StatusBadge status={row.original.status} />,
-    },
-    {
-      accessorKey: 'accessCode',
-      header: 'Code d\'accès',
-      cell: ({ row }) => (
-        <div className="flex items-center gap-2">
-          <code className="text-sm font-mono bg-muted px-2 py-0.5 rounded">{row.original.accessCode}</code>
-          <button
-            onClick={() => { navigator.clipboard.writeText(row.original.accessCode); toast.success('Copié !') }}
-            className="text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <Copy className="h-3 w-3" />
-          </button>
-        </div>
-      ),
-    },
-    {
-      accessorKey: 'tags',
-      header: 'Tags',
-      cell: ({ row }) => (
-        <div className="flex flex-wrap gap-1">
-          {row.original.tags.map(tag => (
-            <Badge key={tag} variant="secondary" className="text-xs">{tag}</Badge>
-          ))}
-        </div>
-      ),
-    },
-    {
-      accessorKey: 'createdAt',
-      header: 'Inscription',
-      cell: ({ row }) => <span className="text-sm text-muted-foreground">{formatDate(row.original.createdAt)}</span>,
-    },
-    {
-      id: 'actions',
-      cell: ({ row: { original: m } }) => (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon-sm"><MoreHorizontal className="h-4 w-4" /></Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => { setEditMember(m); setFormOpen(true) }}>
-              Modifier
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => { navigator.clipboard.writeText(m.accessCode); toast.success('Code copié') }}>
-              <Copy className="h-4 w-4 mr-2" />Copier le code
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => regenMutation.mutate(m.id)}>
-              <RefreshCw className="h-4 w-4 mr-2" />Régénérer le code
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => toast.info('Email d\'invitation envoyé (simulé)')}>
-              <Mail className="h-4 w-4 mr-2" />Renvoyer invitation
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            {m.status === 'active' ? (
-              <DropdownMenuItem onClick={() => suspendMutation.mutate(m.id)} className="text-amber-600">
-                <Ban className="h-4 w-4 mr-2" />Suspendre
+        ),
+      },
+      {
+        accessorKey: "status",
+        header: "Statut",
+        cell: ({ row }) => <StatusBadge status={row.original.status} />,
+      },
+      {
+        accessorKey: "accessCode",
+        header: "Code d'accès",
+        cell: ({ row }) => (
+          <div className="flex items-center gap-2">
+            <code className="text-sm font-mono bg-muted px-2 py-0.5 rounded">
+              {row.original.accessCode}
+            </code>
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(row.original.accessCode);
+                toast.success("Copié !");
+              }}
+              className="text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <Copy className="h-3 w-3" />
+            </button>
+          </div>
+        ),
+      },
+      {
+        accessorKey: "tags",
+        header: "Tags",
+        cell: ({ row }) => (
+          <div className="flex flex-wrap gap-1">
+            {row.original.tags.map((tag) => (
+              <Badge key={tag} variant="secondary" className="text-xs">
+                {tag}
+              </Badge>
+            ))}
+          </div>
+        ),
+      },
+      {
+        accessorKey: "createdAt",
+        header: "Inscription",
+        cell: ({ row }) => (
+          <span className="text-sm text-muted-foreground">
+            {formatDate(row.original.createdAt)}
+          </span>
+        ),
+      },
+      {
+        id: "actions",
+        cell: ({ row: { original: m } }) => (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon-sm">
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem
+                onClick={() => {
+                  setEditMember(m);
+                  setFormOpen(true);
+                }}
+              >
+                Modifier
               </DropdownMenuItem>
-            ) : (
-              <DropdownMenuItem onClick={() => activateMutation.mutate(m.id)} className="text-emerald-600">
-                <CheckCircle className="h-4 w-4 mr-2" />Activer
+              <DropdownMenuItem
+                onClick={() => {
+                  navigator.clipboard.writeText(m.accessCode);
+                  toast.success("Code copié");
+                }}
+              >
+                <Copy className="h-4 w-4 mr-2" />
+                Copier le code
               </DropdownMenuItem>
-            )}
-            <DropdownMenuItem onClick={() => setDeleteId(m.id)} className="text-destructive">
-              <Trash2 className="h-4 w-4 mr-2" />Supprimer
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      ),
-    },
-  ], [regenMutation, suspendMutation, activateMutation])
+              <DropdownMenuItem onClick={() => regenMutation.mutate(m.id)}>
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Régénérer le code
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => toast.info("Email d'invitation envoyé (simulé)")}
+              >
+                <Mail className="h-4 w-4 mr-2" />
+                Renvoyer invitation
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              {m.status === "active" ? (
+                <DropdownMenuItem
+                  onClick={() => suspendMutation.mutate(m.id)}
+                  className="text-amber-600"
+                >
+                  <Ban className="h-4 w-4 mr-2" />
+                  Suspendre
+                </DropdownMenuItem>
+              ) : (
+                <DropdownMenuItem
+                  onClick={() => activateMutation.mutate(m.id)}
+                  className="text-emerald-600"
+                >
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  Activer
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuItem
+                onClick={() => setDeleteId(m.id)}
+                className="text-destructive"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Supprimer
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ),
+      },
+    ],
+    [regenMutation, suspendMutation, activateMutation],
+  );
 
   const table = useReactTable({
     data: data?.data ?? [],
@@ -187,19 +293,29 @@ export function MembersPage() {
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-  })
+  });
 
-  const selectedIds = table.getSelectedRowModel().rows.map(r => r.original.id)
+  const selectedIds = table
+    .getSelectedRowModel()
+    .rows.map((r) => r.original.id);
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Membres</h1>
-          <p className="text-muted-foreground">Gérez vos membres et leurs codes d'accès.</p>
+          <p className="text-muted-foreground">
+            Gérez vos membres et leurs codes d'accès.
+          </p>
         </div>
-        <Button onClick={() => { setEditMember(null); setFormOpen(true) }}>
-          <Plus className="h-4 w-4 mr-2" />Nouveau membre
+        <Button
+          onClick={() => {
+            setEditMember(null);
+            setFormOpen(true);
+          }}
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Nouveau membre
         </Button>
       </div>
 
@@ -212,13 +328,19 @@ export function MembersPage() {
               <Input
                 placeholder="Rechercher un membre..."
                 value={globalFilter}
-                onChange={e => setGlobalFilter(e.target.value)}
+                onChange={(e) => setGlobalFilter(e.target.value)}
                 className="pl-9"
               />
             </div>
             <div className="flex items-center gap-2">
               <Filter className="h-4 w-4 text-muted-foreground" />
-              <Select value={statusFilter} onValueChange={v => setStatusFilter(v as MemberStatus | 'all')}>
+              <Select
+                value={statusFilter}
+                onValueChange={(v) => {
+                  setStatusFilter(v as MemberStatus | "all");
+                  console.log("value is :", v);
+                }}
+              >
                 <SelectTrigger className="w-40">
                   <SelectValue placeholder="Statut" />
                 </SelectTrigger>
@@ -234,14 +356,27 @@ export function MembersPage() {
             <div className="flex items-center gap-2 ml-auto">
               {selectedIds.length > 0 && (
                 <>
-                  <span className="text-sm text-muted-foreground">{selectedIds.length} sélectionné(s)</span>
-                  <Button variant="outline" size="sm" onClick={() => bulkDeleteMutation.mutate(selectedIds)} className="text-destructive">
-                    <Trash2 className="h-4 w-4 mr-1" />Supprimer
+                  <span className="text-sm text-muted-foreground">
+                    {selectedIds.length} sélectionné(s)
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => bulkDeleteMutation.mutate(selectedIds)}
+                    className="text-destructive"
+                  >
+                    <Trash2 className="h-4 w-4 mr-1" />
+                    Supprimer
                   </Button>
                 </>
               )}
-              <Button variant="outline" size="sm" onClick={() => exportToCSV(data?.data ?? [], 'membres')}>
-                <Download className="h-4 w-4 mr-2" />Exporter CSV
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => exportToCSV(data?.data ?? [], "membres")}
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Exporter CSV
               </Button>
             </div>
           </div>
@@ -250,16 +385,19 @@ export function MembersPage() {
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
-                {table.getHeaderGroups().map(hg => (
+                {table.getHeaderGroups().map((hg) => (
                   <TableRow key={hg.id}>
-                    {hg.headers.map(header => (
+                    {hg.headers.map((header) => (
                       <TableHead key={header.id} className="whitespace-nowrap">
                         {header.isPlaceholder ? null : (
                           <button
-                            className={`flex items-center gap-1 ${header.column.getCanSort() ? 'cursor-pointer hover:text-foreground' : ''}`}
+                            className={`flex items-center gap-1 ${header.column.getCanSort() ? "cursor-pointer hover:text-foreground" : ""}`}
                             onClick={header.column.getToggleSortingHandler()}
                           >
-                            {flexRender(header.column.columnDef.header, header.getContext())}
+                            {flexRender(
+                              header.column.columnDef.header,
+                              header.getContext(),
+                            )}
                           </button>
                         )}
                       </TableHead>
@@ -272,22 +410,33 @@ export function MembersPage() {
                   Array.from({ length: 8 }, (_, i) => (
                     <TableRow key={i}>
                       {columns.map((_, j) => (
-                        <TableCell key={j}><Skeleton className="h-8 w-full" /></TableCell>
+                        <TableCell key={j}>
+                          <Skeleton className="h-8 w-full" />
+                        </TableCell>
                       ))}
                     </TableRow>
                   ))
                 ) : table.getRowModel().rows.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={columns.length} className="h-32 text-center text-muted-foreground">
+                    <TableCell
+                      colSpan={columns.length}
+                      className="h-32 text-center text-muted-foreground"
+                    >
                       Aucun membre trouvé.
                     </TableCell>
                   </TableRow>
                 ) : (
-                  table.getRowModel().rows.map(row => (
-                    <TableRow key={row.id} data-state={row.getIsSelected() ? 'selected' : undefined}>
-                      {row.getVisibleCells().map(cell => (
+                  table.getRowModel().rows.map((row) => (
+                    <TableRow
+                      key={row.id}
+                      data-state={row.getIsSelected() ? "selected" : undefined}
+                    >
+                      {row.getVisibleCells().map((cell) => (
                         <TableCell key={cell.id}>
-                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext(),
+                          )}
                         </TableCell>
                       ))}
                     </TableRow>
@@ -313,8 +462,13 @@ export function MembersPage() {
         title="Supprimer ce membre ?"
         description="Cette action est irréversible. Toutes les données de ce membre seront supprimées définitivement."
         confirmLabel="Supprimer"
-        onConfirm={() => { if (deleteId) { deleteMutation.mutate(deleteId); setDeleteId(null) } }}
+        onConfirm={() => {
+          if (deleteId) {
+            deleteMutation.mutate(deleteId);
+            setDeleteId(null);
+          }
+        }}
       />
     </div>
-  )
+  );
 }
