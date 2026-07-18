@@ -1,5 +1,10 @@
-import { useState, useMemo, useDeferredValue } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState, useMemo } from "react";
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  keepPreviousData,
+} from "@tanstack/react-query";
 import {
   useReactTable,
   getCoreRowModel,
@@ -58,12 +63,13 @@ import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { DataTablePagination } from "@/components/shared/DataTablePagination";
 import { MemberFormDialog } from "./MemberFormDialog";
 import { formatDate, getInitials, exportToCSV } from "@/lib/utils";
+import { useDebounce } from "@/hooks/use-debounce";
 import type { Member, MemberStatus } from "@/types";
 
 export function MembersPage() {
   const queryClient = useQueryClient();
   const [globalFilter, setGlobalFilter] = useState("");
-  const deferredGlobalFilter = useDeferredValue(globalFilter);
+  const debouncedFilter = useDebounce(globalFilter, 350);
   const [statusFilter, setStatusFilter] = useState<MemberStatus | "active">(
     "active",
   );
@@ -74,17 +80,24 @@ export function MembersPage() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
   const { data, isLoading } = useQuery({
-    queryKey: [
-      "members",
-      { status: statusFilter, search: deferredGlobalFilter },
-    ],
+    queryKey: ["members", { status: statusFilter, search: debouncedFilter }],
     queryFn: () =>
       membersService.getMembers({
         status: statusFilter,
-        search: deferredGlobalFilter,
+        search: debouncedFilter,
         limit: 200,
       }),
+    // Keep showing the previous page's rows while a filter change refetches, so
+    // `data` never becomes undefined mid-render (which — combined with a fresh
+    // data array — used to trigger react-table's autoReset loop → freeze).
+    placeholderData: keepPreviousData,
   });
+
+  // Stable table-data reference: without useMemo, `data?.data ?? []` is a NEW
+  // array every render; react-table's autoResetPageIndex then fires a state
+  // update each render → infinite loop. Memoizing keeps the empty array (and
+  // the loaded array) referentially stable.
+  const rows = useMemo(() => data?.data ?? [], [data]);
 
   const deleteMutation = useMutation({
     mutationFn: membersService.deleteMember,
@@ -288,8 +301,9 @@ export function MembersPage() {
   );
 
   const table = useReactTable({
-    data: data?.data ?? [],
+    data: rows,
     columns,
+    autoResetPageIndex: false,
     state: { sorting, rowSelection },
     onSortingChange: setSorting,
     onRowSelectionChange: setRowSelection,
@@ -339,10 +353,7 @@ export function MembersPage() {
               <Filter className="h-4 w-4 text-muted-foreground" />
               <Select
                 value={statusFilter}
-                onValueChange={(v) => {
-                  setStatusFilter(v as MemberStatus | "all");
-                  console.log("value is :", v);
-                }}
+                onValueChange={(v) => setStatusFilter(v as MemberStatus)}
               >
                 <SelectTrigger className="w-40">
                   <SelectValue placeholder="Statut" />

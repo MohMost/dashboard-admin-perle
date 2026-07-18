@@ -1,5 +1,5 @@
-import { useState, useMemo, useDeferredValue } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useState, useMemo } from 'react'
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import {
   useReactTable, getCoreRowModel, getPaginationRowModel,
   flexRender, type ColumnDef,
@@ -22,12 +22,13 @@ import { DataTablePagination } from '@/components/shared/DataTablePagination'
 import { UserFormDialog } from './UserFormDialog'
 import { formatDate, formatRelativeTime, getInitials, exportToCSV } from '@/lib/utils'
 import { ROLES } from '@/lib/constants'
+import { useDebounce } from '@/hooks/use-debounce'
 import type { AdminUser, UserRole, UserStatus } from '@/types'
 
 export function UsersPage() {
   const queryClient = useQueryClient()
   const [search, setSearch] = useState('')
-  const deferredSearch = useDeferredValue(search)
+  const debouncedSearch = useDebounce(search, 350)
   const [roleFilter, setRoleFilter] = useState<UserRole | 'all'>('all')
   const [statusFilter, setStatusFilter] = useState<UserStatus | 'all'>('all')
   const [formOpen, setFormOpen] = useState(false)
@@ -35,9 +36,14 @@ export function UsersPage() {
   const [deleteId, setDeleteId] = useState<string | null>(null)
 
   const { data, isLoading } = useQuery({
-    queryKey: ['users', { search: deferredSearch, role: roleFilter, status: statusFilter }],
-    queryFn: () => usersService.getUsers({ search: deferredSearch, role: roleFilter, status: statusFilter, limit: 100 }),
+    queryKey: ['users', { search: debouncedSearch, role: roleFilter, status: statusFilter }],
+    queryFn: () => usersService.getUsers({ search: debouncedSearch, role: roleFilter, status: statusFilter, limit: 100 }),
+    placeholderData: keepPreviousData,
   })
+
+  // Stable reference for react-table (prevents an autoReset render loop that
+  // froze the page when a filter changed — see MembersPage for details).
+  const rows = useMemo(() => data?.data ?? [], [data])
 
   const deleteMutation = useMutation({
     mutationFn: usersService.deleteUser,
@@ -128,8 +134,9 @@ export function UsersPage() {
   ], [suspendMutation, activateMutation])
 
   const table = useReactTable({
-    data: data?.data ?? [],
+    data: rows,
     columns,
+    autoResetPageIndex: false,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
   })

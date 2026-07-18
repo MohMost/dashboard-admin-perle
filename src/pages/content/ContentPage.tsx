@@ -1,5 +1,5 @@
-import { useState, useMemo, useDeferredValue } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useState, useMemo } from 'react'
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import {
   useReactTable, getCoreRowModel, getPaginationRowModel,
   getSortedRowModel, flexRender, type ColumnDef, type SortingState,
@@ -21,12 +21,13 @@ import { DataTablePagination } from '@/components/shared/DataTablePagination'
 import { ContentFormDialog } from './ContentFormDialog'
 import { formatDate, exportToCSV } from '@/lib/utils'
 import { CONTENT_TYPES } from '@/lib/constants'
+import { useDebounce } from '@/hooks/use-debounce'
 import type { ContentItem, ContentStatus, ContentType } from '@/types'
 
 export function ContentPage() {
   const queryClient = useQueryClient()
   const [search, setSearch] = useState('')
-  const deferredSearch = useDeferredValue(search)
+  const debouncedSearch = useDebounce(search, 350)
   const [statusFilter, setStatusFilter] = useState<ContentStatus | 'all'>('all')
   const [typeFilter, setTypeFilter] = useState<ContentType | 'all'>('all')
   const [sorting, setSorting] = useState<SortingState>([])
@@ -35,9 +36,14 @@ export function ContentPage() {
   const [deleteId, setDeleteId] = useState<string | null>(null)
 
   const { data, isLoading } = useQuery({
-    queryKey: ['content', { search: deferredSearch, status: statusFilter, type: typeFilter }],
-    queryFn: () => contentService.getContent({ search: deferredSearch, status: statusFilter, type: typeFilter, limit: 200 }),
+    queryKey: ['content', { search: debouncedSearch, status: statusFilter, type: typeFilter }],
+    queryFn: () => contentService.getContent({ search: debouncedSearch, status: statusFilter, type: typeFilter, limit: 200 }),
+    placeholderData: keepPreviousData,
   })
+
+  // Stable reference for react-table (prevents the autoReset render loop that
+  // froze the page on filter change — see MembersPage for details).
+  const rows = useMemo(() => data?.data ?? [], [data])
 
   const deleteMutation = useMutation({
     mutationFn: contentService.deleteContent,
@@ -146,8 +152,9 @@ export function ContentPage() {
   ], [publishMutation, unpublishMutation, archiveMutation])
 
   const table = useReactTable({
-    data: data?.data ?? [],
+    data: rows,
     columns,
+    autoResetPageIndex: false,
     state: { sorting },
     onSortingChange: setSorting,
     getCoreRowModel: getCoreRowModel(),
