@@ -89,11 +89,10 @@ export function LoginPage() {
             <p className="text-muted-foreground">Accédez à votre tableau de bord administrateur</p>
           </div>
 
-          {/* Demo hints */}
+          {/* Demo hint — the seeded backend admin (see backend `pnpm db:seed`) */}
           <div className="rounded-lg bg-muted p-3 text-xs text-muted-foreground space-y-1">
-            <p className="font-medium text-foreground">Comptes de démonstration :</p>
-            <p>superadmin@perledelys.fr / admin123</p>
-            <p>editor@perledelys.fr / admin123</p>
+            <p className="font-medium text-foreground">Compte administrateur :</p>
+            <p>admin@perledelys.fr / admin1234</p>
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">

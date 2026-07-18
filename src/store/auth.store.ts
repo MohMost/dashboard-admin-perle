@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { AuthUser, LoginCredentials } from '@/types'
 import { authService } from '@/services/auth.service'
+import { setAuthToken } from '@/lib/api-client'
 
 interface AuthStore {
   user: AuthUser | null
@@ -56,6 +57,10 @@ export const useAuthStore = create<AuthStore>()(
     {
       name: 'auth-storage',
       partialize: (state) => ({ token: state.token, user: state.user, isAuthenticated: state.isAuthenticated }),
+      // Restore the Authorization header for the api-client after a reload.
+      onRehydrateStorage: () => (state) => {
+        if (state?.token) setAuthToken(state.token)
+      },
     }
   )
 )

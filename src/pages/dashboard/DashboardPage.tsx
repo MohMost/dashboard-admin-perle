@@ -1,3 +1,31 @@
+// ============================================================================
+// ⚠️ ANALYTICS TEMPORARILY REMOVED — client request (2026-07-18)
+// ----------------------------------------------------------------------------
+// The analytics overview (stat cards + recharts trend/pie + recent-activity
+// feed) is DISABLED, not deleted. The full original implementation is kept
+// verbatim in the commented block at the bottom of this file so it can be
+// restored wholesale later (see BACKEND_PLAN.md Phase 6). The 5 decorative
+// JSX section markers ({/* ... */}) were rewritten as plain "// --- Label ---"
+// lines so they survive the surrounding block comment — re-add the JSX comment
+// syntax if you restore.
+//
+// While disabled, the /dashboard index simply redirects to /dashboard/members.
+// The analytics service/mock/types (services/analytics.service.ts,
+// mocks/analytics.mock.ts, the Analytics* types in types/index.ts) are left in
+// place but dormant (only referenced by the commented code below).
+// ============================================================================
+import { Navigate } from 'react-router-dom'
+
+export function DashboardPage() {
+  return <Navigate to="/dashboard/members" replace />
+}
+
+/* ===========================================================================
+   ORIGINAL ANALYTICS IMPLEMENTATION — preserved, do not delete.
+   To restore: delete the redirect stub above, uncomment this block, and
+   convert the "// --- Label ---" markers back into {/* Label * / } JSX comments.
+   ---------------------------------------------------------------------------
+
 import { useQuery } from '@tanstack/react-query'
 import { Users, UserCheck, FileText, TrendingUp, TrendingDown, Activity, UserPlus, BookOpen, RefreshCw, ShieldAlert } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
@@ -85,7 +113,7 @@ export function DashboardPage() {
         <p className="text-muted-foreground">Bienvenue sur votre tableau de bord Perle de Lys.</p>
       </div>
 
-      {/* Stats grid */}
+      // --- Stats grid ---
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat) => (
           <Card key={stat.title}>
@@ -120,7 +148,7 @@ export function DashboardPage() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-        {/* Members trend */}
+        // --- Members trend ---
         <Card className="lg:col-span-4">
           <CardHeader>
             <CardTitle>Croissance des membres</CardTitle>
@@ -152,7 +180,7 @@ export function DashboardPage() {
           </CardContent>
         </Card>
 
-        {/* Member distribution */}
+        // --- Member distribution ---
         <Card className="lg:col-span-3">
           <CardHeader>
             <CardTitle>Répartition des membres</CardTitle>
@@ -181,7 +209,7 @@ export function DashboardPage() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
-        {/* Content trend */}
+        // --- Content trend ---
         <Card>
           <CardHeader>
             <CardTitle>Publications de contenu</CardTitle>
@@ -209,7 +237,7 @@ export function DashboardPage() {
           </CardContent>
         </Card>
 
-        {/* Recent activity */}
+        // --- Recent activity ---
         <Card>
           <CardHeader>
             <CardTitle>Activité récente</CardTitle>
@@ -255,3 +283,5 @@ export function DashboardPage() {
     </div>
   )
 }
+
+=========================================================================== */

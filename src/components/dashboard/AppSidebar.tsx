@@ -1,6 +1,7 @@
 import { useLocation, Link } from 'react-router-dom'
 import {
-  LayoutDashboard, Users, UserCheck, FileText, Settings, Sparkles, LogOut, ChevronRight,
+  // LayoutDashboard, // used only by the disabled "Vue d'ensemble" analytics nav item
+  Users, UserCheck, FileText, Settings, Sparkles, LogOut, ChevronRight,
 } from 'lucide-react'
 import {
   Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent,
@@ -15,7 +16,10 @@ import { ROLES } from '@/lib/constants'
 import { ModeToggle } from '@/components/mode-toggle'
 
 const navItems = [
-  { title: 'Vue d\'ensemble', href: '/dashboard', icon: LayoutDashboard },
+  // Analytics overview ("Vue d'ensemble") removed at client request (2026-07-18)
+  // — not deleted, just hidden from the nav. The /dashboard index redirects to
+  // /dashboard/members while disabled. Restore this entry to bring it back.
+  // { title: 'Vue d\'ensemble', href: '/dashboard', icon: LayoutDashboard },
   { title: 'Membres', href: '/dashboard/members', icon: UserCheck },
   { title: 'Utilisateurs', href: '/dashboard/users', icon: Users },
   { title: 'Contenus', href: '/dashboard/content', icon: FileText },

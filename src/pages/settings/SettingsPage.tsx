@@ -13,6 +13,7 @@ import { Separator } from '@/components/ui/separator'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useSettingsStore } from '@/store/settings.store'
+import { ActivationCodeCard } from '@/pages/settings/ActivationCodeCard'
 
 const platformSchema = z.object({
   platformName: z.string().min(1, 'Requis'),
@@ -259,7 +260,8 @@ export function SettingsPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="access" className="mt-6">
+        <TabsContent value="access" className="mt-6 space-y-6">
+          <ActivationCodeCard />
           <Card>
             <CardHeader>
               <CardTitle>Contrôle d'accès</CardTitle>

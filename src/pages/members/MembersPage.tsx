@@ -118,6 +118,9 @@ export function MembersPage() {
       navigator.clipboard.writeText(m.accessCode);
       toast.success(`Code régénéré : ${m.accessCode} (copié)`);
     },
+    // Not applicable to the global-code model — surface the backend/service
+    // message instead of failing silently.
+    onError: (e: Error) => toast.error(e.message),
   });
 
   const bulkDeleteMutation = useMutation({
