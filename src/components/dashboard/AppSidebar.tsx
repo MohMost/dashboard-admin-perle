@@ -1,7 +1,8 @@
 import { useLocation, Link } from 'react-router-dom'
 import {
   // LayoutDashboard, // used only by the disabled "Vue d'ensemble" analytics nav item
-  Users, UserCheck, FileText, Settings, Sparkles, LogOut, ChevronRight,
+  // Users, // used only by the disabled "Utilisateurs" (admin users) nav item
+  UserCheck, FileText, Settings, Sparkles, LogOut, ChevronRight,
 } from 'lucide-react'
 import {
   Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent,
@@ -21,7 +22,10 @@ const navItems = [
   // /dashboard/members while disabled. Restore this entry to bring it back.
   // { title: 'Vue d\'ensemble', href: '/dashboard', icon: LayoutDashboard },
   { title: 'Membres', href: '/dashboard/members', icon: UserCheck },
-  { title: 'Utilisateurs', href: '/dashboard/users', icon: Users },
+  // "Utilisateurs" (admin/team accounts) hidden at client request (2026-07-18) —
+  // the app has a single admin and "Membres" (native-app users in the DB) is the
+  // relevant list. Not deleted; restore this line + the /users route to bring back.
+  // { title: 'Utilisateurs', href: '/dashboard/users', icon: Users },
   { title: 'Contenus', href: '/dashboard/content', icon: FileText },
   { title: 'Paramètres', href: '/dashboard/settings', icon: Settings },
 ]

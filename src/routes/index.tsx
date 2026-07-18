@@ -7,7 +7,7 @@ import { ForgotPasswordPage } from '@/pages/auth/ForgotPasswordPage'
 import { ResetPasswordPage } from '@/pages/auth/ResetPasswordPage'
 import { DashboardPage } from '@/pages/dashboard/DashboardPage'
 import { MembersPage } from '@/pages/members/MembersPage'
-import { UsersPage } from '@/pages/users/UsersPage'
+// import { UsersPage } from '@/pages/users/UsersPage' // "Utilisateurs" hidden — see AppSidebar
 import { ContentPage } from '@/pages/content/ContentPage'
 import { SettingsPage } from '@/pages/settings/SettingsPage'
 import { NotFoundPage } from '@/pages/NotFoundPage'
@@ -33,7 +33,7 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <DashboardPage /> },
       { path: 'members', element: <MembersPage /> },
-      { path: 'users', element: <UsersPage /> },
+      // { path: 'users', element: <UsersPage /> }, // "Utilisateurs" hidden — see AppSidebar
       { path: 'content', element: <ContentPage /> },
       { path: 'settings', element: <SettingsPage /> },
     ],
