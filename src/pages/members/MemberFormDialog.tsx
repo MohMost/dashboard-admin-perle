@@ -39,7 +39,9 @@ export function MemberFormDialog({ open, onOpenChange, member }: MemberFormDialo
         lastName: member.lastName,
         email: member.email,
         phone: member.phone ?? '',
-        status: member.status,
+        // Member.status carries the filter sentinel 'all' in its union; a real
+        // member never has it, so narrow to the form's status set.
+        status: member.status as MemberFormData['status'],
         tags: member.tags,
         notes: member.notes ?? '',
       })

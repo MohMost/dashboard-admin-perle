@@ -4,7 +4,9 @@ import type { MemberStatus, UserStatus, ContentStatus } from '@/types'
 
 type Status = MemberStatus | UserStatus | ContentStatus
 
-const statusConfig: Record<Status, { label: string; className: string }> = {
+// Partial: some members of the Status union are filter sentinels (e.g. "all")
+// with no badge; the component falls back to the raw label for anything missing.
+const statusConfig: Partial<Record<Status, { label: string; className: string }>> = {
   active: { label: 'Actif', className: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400' },
   suspended: { label: 'Suspendu', className: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' },
   inactive: { label: 'Inactif', className: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400' },

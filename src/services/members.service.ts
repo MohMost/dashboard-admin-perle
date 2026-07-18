@@ -98,9 +98,15 @@ export const membersService = {
     return mapMember(found)
   },
 
-  createMember: (): Promise<Member> => Promise.reject(new Error(NOT_SUPPORTED)),
+  // Not applicable to the global-code / self-serve model — kept with their
+  // original signatures so the (template) UI still type-checks; they reject
+  // with a clear message when invoked.
+  createMember: (
+    _data: Omit<Member, 'id' | 'username' | 'accessCode' | 'createdAt' | 'updatedAt'>,
+  ): Promise<Member> => Promise.reject(new Error(NOT_SUPPORTED)),
 
-  updateMember: (): Promise<Member> => Promise.reject(new Error(NOT_SUPPORTED)),
+  updateMember: (_id: string, _data: Partial<Member>): Promise<Member> =>
+    Promise.reject(new Error(NOT_SUPPORTED)),
 
   deleteMember: async (id: string): Promise<void> => {
     await apiFetch(`/admin/members/${id}`, { method: 'DELETE' })
@@ -122,7 +128,8 @@ export const membersService = {
       }),
     ),
 
-  regenerateCode: (): Promise<Member> => Promise.reject(new Error(NOT_SUPPORTED)),
+  regenerateCode: (_id: string): Promise<Member> =>
+    Promise.reject(new Error(NOT_SUPPORTED)),
 
   bulkDelete: async (ids: string[]): Promise<void> => {
     await Promise.all(

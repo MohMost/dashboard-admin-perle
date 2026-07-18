@@ -151,34 +151,6 @@ export const COLLECTIONS: CollectionDef[] = [
     ],
   },
   {
-    key: 'events',
-    label: 'Événements',
-    singular: 'événement',
-    columns: [
-      { header: 'Titre', accessor: (r) => str(r.title) },
-      { header: 'Date', accessor: (r) => str(r.date) },
-      { header: 'Type', accessor: (r) => str(r.type) },
-      { header: 'Heure', accessor: (r) => str(r.time) },
-    ],
-    fields: [
-      { name: 'title', label: 'Titre', type: 'text' },
-      { name: 'date', label: 'Date', type: 'text', placeholder: '2026-08-01' },
-      { name: 'time', label: 'Heure', type: 'text', placeholder: '20:00' },
-      {
-        name: 'type',
-        label: 'Type',
-        type: 'select',
-        options: [
-          { value: 'live', label: 'Live' },
-          { value: 'atelier', label: 'Atelier' },
-          { value: 'publication', label: 'Publication' },
-          { value: 'rappel', label: 'Rappel' },
-        ],
-      },
-      { name: 'description', label: 'Description (optionnel)', type: 'textarea' },
-    ],
-  },
-  {
     key: 'faq',
     label: 'FAQ',
     singular: 'question',
@@ -193,3 +165,42 @@ export const COLLECTIONS: CollectionDef[] = [
     ],
   },
 ]
+
+// Events live on their own top-level "Événements" page (WIRING_PLAN B2/D4),
+// not in the Content tabs. Events of type "live" are auto-created/kept in sync
+// by the backend when a Live is saved (they carry a liveId); admins can also
+// add any event here. `remindMinutesBefore` drives the app's push reminder.
+export const EVENTS_DEF: CollectionDef = {
+  key: 'events',
+  label: 'Événements',
+  singular: 'événement',
+  columns: [
+    { header: 'Titre', accessor: (r) => str(r.title) },
+    { header: 'Date', accessor: (r) => str(r.date) },
+    { header: 'Heure', accessor: (r) => str(r.time) },
+    { header: 'Type', accessor: (r) => str(r.type) },
+    { header: 'Rappel', accessor: (r) => (r.remindMinutesBefore != null ? `${String(r.remindMinutesBefore)} min avant` : '—') },
+  ],
+  fields: [
+    { name: 'title', label: 'Titre', type: 'text' },
+    { name: 'date', label: 'Date', type: 'text', placeholder: '2026-08-01' },
+    { name: 'time', label: 'Heure', type: 'text', placeholder: '20:00' },
+    {
+      name: 'type',
+      label: 'Type',
+      type: 'select',
+      options: [
+        { value: 'live', label: 'Live' },
+        { value: 'atelier', label: 'Atelier' },
+        { value: 'publication', label: 'Publication' },
+        { value: 'rappel', label: 'Rappel' },
+      ],
+    },
+    {
+      name: 'remindMinutesBefore',
+      label: "Rappel — minutes avant l'événement (0 = à l'heure pile)",
+      type: 'number',
+    },
+    { name: 'description', label: 'Description (optionnel)', type: 'textarea' },
+  ],
+}

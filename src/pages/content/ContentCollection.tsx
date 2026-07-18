@@ -1,19 +1,19 @@
-import { useState } from 'react'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { toast } from 'sonner'
-import { Pencil, Plus, Trash2 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
-import { Label } from '@/components/ui/label'
-import { Switch } from '@/components/ui/switch'
+import { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { Pencil, Plus, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -21,63 +21,69 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
+} from "@/components/ui/table";
 import {
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
-import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
-import { Skeleton } from '@/components/ui/skeleton'
-import { contentService, type ContentRecord } from '@/services/content.service'
-import type { CollectionDef, FieldDef } from './content-config'
+} from "@/components/ui/dialog";
+import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
+import { Skeleton } from "@/components/ui/skeleton";
+import { contentService, type ContentRecord } from "@/services/content.service";
+import type { CollectionDef, FieldDef } from "./content-config";
 
-type FormValues = Record<string, string | boolean>
+type FormValues = Record<string, string | boolean>;
 
 // item field value -> form field value (arrays become newline text)
-function buildInitial(def: CollectionDef, item: ContentRecord | null): FormValues {
-  const v: FormValues = {}
+function buildInitial(
+  def: CollectionDef,
+  item: ContentRecord | null,
+): FormValues {
+  const v: FormValues = {};
   for (const f of def.fields) {
-    const raw = item?.[f.name]
-    if (f.type === 'boolean') v[f.name] = Boolean(raw)
-    else if (f.type === 'linesList')
-      v[f.name] = Array.isArray(raw) ? (raw as string[]).join('\n') : ''
-    else if (f.type === 'keyValueLines')
+    const raw = item?.[f.name];
+    if (f.type === "boolean") v[f.name] = Boolean(raw);
+    else if (f.type === "linesList")
+      v[f.name] = Array.isArray(raw) ? (raw as string[]).join("\n") : "";
+    else if (f.type === "keyValueLines")
       v[f.name] = Array.isArray(raw)
         ? (raw as { label: string; qty: string }[])
             .map((r) => `${r.label} | ${r.qty}`)
-            .join('\n')
-        : ''
-    else v[f.name] = raw == null ? '' : String(raw)
+            .join("\n")
+        : "";
+    else v[f.name] = raw == null ? "" : String(raw);
   }
-  return v
+  return v;
 }
 
 // form values -> API payload (parse numbers / arrays back)
-function buildPayload(def: CollectionDef, values: FormValues): Record<string, unknown> {
-  const out: Record<string, unknown> = {}
+function buildPayload(
+  def: CollectionDef,
+  values: FormValues,
+): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
   for (const f of def.fields) {
-    const val = values[f.name]
-    if (f.type === 'number') out[f.name] = Number(val === '' ? 0 : val)
-    else if (f.type === 'boolean') out[f.name] = Boolean(val)
-    else if (f.type === 'linesList')
+    const val = values[f.name];
+    if (f.type === "number") out[f.name] = Number(val === "" ? 0 : val);
+    else if (f.type === "boolean") out[f.name] = Boolean(val);
+    else if (f.type === "linesList")
       out[f.name] = String(val)
-        .split('\n')
+        .split("\n")
         .map((s) => s.trim())
-        .filter(Boolean)
-    else if (f.type === 'keyValueLines')
+        .filter(Boolean);
+    else if (f.type === "keyValueLines")
       out[f.name] = String(val)
-        .split('\n')
+        .split("\n")
         .map((line) => {
-          const [label, qty] = line.split('|').map((s) => s.trim())
-          return { label: label ?? '', qty: qty ?? '' }
+          const [label, qty] = line.split("|").map((s) => s.trim());
+          return { label: label ?? "", qty: qty ?? "" };
         })
-        .filter((r) => r.label)
-    else out[f.name] = String(val).trim()
+        .filter((r) => r.label);
+    else out[f.name] = String(val).trim();
   }
-  return out
+  return out;
 }
 
 function Field({
@@ -85,18 +91,21 @@ function Field({
   value,
   onChange,
 }: {
-  field: FieldDef
-  value: string | boolean
-  onChange: (v: string | boolean) => void
+  field: FieldDef;
+  value: string | boolean;
+  onChange: (v: string | boolean) => void;
 }) {
   return (
     <div className="space-y-1.5">
       <Label>{field.label}</Label>
-      {field.type === 'boolean' ? (
+      {field.type === "boolean" ? (
         <div>
-          <Switch checked={Boolean(value)} onCheckedChange={(v) => onChange(v)} />
+          <Switch
+            checked={Boolean(value)}
+            onCheckedChange={(v) => onChange(v)}
+          />
         </div>
-      ) : field.type === 'select' ? (
+      ) : field.type === "select" ? (
         <Select value={String(value)} onValueChange={(v) => onChange(v)}>
           <SelectTrigger>
             <SelectValue placeholder="Choisir…" />
@@ -109,30 +118,31 @@ function Field({
             ))}
           </SelectContent>
         </Select>
-      ) : field.type === 'textarea' ||
-        field.type === 'linesList' ||
-        field.type === 'keyValueLines' ? (
+      ) : field.type === "textarea" ||
+        field.type === "linesList" ||
+        field.type === "keyValueLines" ? (
         <Textarea
-          rows={field.type === 'text' ? 2 : 4}
+          rows={field.type === "textarea" ? 2 : 4}
           value={String(value)}
           placeholder={field.placeholder}
           onChange={(e) => onChange(e.target.value)}
         />
       ) : (
         <Input
-          type={field.type === 'number' ? 'number' : 'text'}
+          type={field.type === "number" ? "number" : "text"}
           value={String(value)}
           placeholder={field.placeholder}
           onChange={(e) => onChange(e.target.value)}
         />
       )}
-      {field.type === 'imageUrl' && (
+      {field.type === "imageUrl" && (
         <p className="text-xs text-muted-foreground">
-          Collez l'URL d'une image hébergée. L'upload direct sera ajouté plus tard.
+          Collez l'URL d'une image hébergée. L'upload direct sera ajouté plus
+          tard.
         </p>
       )}
     </div>
-  )
+  );
 }
 
 function ContentItemForm({
@@ -142,21 +152,23 @@ function ContentItemForm({
   onCancel,
   onSave,
 }: {
-  def: CollectionDef
-  item: ContentRecord | null
-  saving: boolean
-  onCancel: () => void
-  onSave: (payload: Record<string, unknown>) => void
+  def: CollectionDef;
+  item: ContentRecord | null;
+  saving: boolean;
+  onCancel: () => void;
+  onSave: (payload: Record<string, unknown>) => void;
 }) {
-  const [values, setValues] = useState<FormValues>(() => buildInitial(def, item))
+  const [values, setValues] = useState<FormValues>(() =>
+    buildInitial(def, item),
+  );
   const set = (name: string, v: string | boolean) =>
-    setValues((prev) => ({ ...prev, [name]: v }))
+    setValues((prev) => ({ ...prev, [name]: v }));
 
   return (
     <form
       onSubmit={(e) => {
-        e.preventDefault()
-        onSave(buildPayload(def, values))
+        e.preventDefault();
+        onSave(buildPayload(def, values));
       }}
       className="space-y-4"
     >
@@ -165,7 +177,7 @@ function ContentItemForm({
           <Field
             key={f.name}
             field={f}
-            value={values[f.name] ?? ''}
+            value={values[f.name] ?? ""}
             onChange={(v) => set(f.name, v)}
           />
         ))}
@@ -175,51 +187,53 @@ function ContentItemForm({
           Annuler
         </Button>
         <Button type="submit" disabled={saving}>
-          {saving ? 'Enregistrement…' : 'Enregistrer'}
+          {saving ? "Enregistrement…" : "Enregistrer"}
         </Button>
       </DialogFooter>
     </form>
-  )
+  );
 }
 
 export function CollectionManager({ def }: { def: CollectionDef }) {
-  const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
   const { data, isLoading } = useQuery({
-    queryKey: ['content', def.key],
+    queryKey: ["content", def.key],
     queryFn: () => contentService.list(def.key),
-  })
+  });
 
-  const [open, setOpen] = useState(false)
-  const [editing, setEditing] = useState<ContentRecord | null>(null)
-  const [deleteId, setDeleteId] = useState<string | null>(null)
-  const [saving, setSaving] = useState(false)
+  const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState<ContentRecord | null>(null);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
 
-  const rows = data ?? []
+  const rows = data ?? [];
 
   const save = async (payload: Record<string, unknown>) => {
-    setSaving(true)
+    setSaving(true);
     try {
-      if (editing) await contentService.update(def.key, editing.id, payload)
-      else await contentService.create(def.key, payload)
-      await queryClient.invalidateQueries({ queryKey: ['content', def.key] })
-      toast.success(editing ? `${def.singular} modifiée` : `${def.singular} créée`)
-      setOpen(false)
-      setEditing(null)
+      if (editing) await contentService.update(def.key, editing.id, payload);
+      else await contentService.create(def.key, payload);
+      await queryClient.invalidateQueries({ queryKey: ["content", def.key] });
+      toast.success(
+        editing ? `${def.singular} modifiée` : `${def.singular} créée`,
+      );
+      setOpen(false);
+      setEditing(null);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Une erreur est survenue.')
+      toast.error(e instanceof Error ? e.message : "Une erreur est survenue.");
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
-  }
+  };
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => contentService.remove(def.key, id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['content', def.key] })
-      toast.success('Supprimé')
+      queryClient.invalidateQueries({ queryKey: ["content", def.key] });
+      toast.success("Supprimé");
     },
     onError: (e: Error) => toast.error(e.message),
-  })
+  });
 
   return (
     <div className="space-y-4">
@@ -227,8 +241,8 @@ export function CollectionManager({ def }: { def: CollectionDef }) {
         <Button
           size="sm"
           onClick={() => {
-            setEditing(null)
-            setOpen(true)
+            setEditing(null);
+            setOpen(true);
           }}
         >
           <Plus className="h-4 w-4 mr-2" />
@@ -268,7 +282,8 @@ export function CollectionManager({ def }: { def: CollectionDef }) {
                   colSpan={def.columns.length + 1}
                   className="h-24 text-center text-muted-foreground"
                 >
-                  Aucun contenu. Cliquez sur « Nouvelle {def.singular} » pour commencer.
+                  Aucun contenu. Cliquez sur « Nouvelle {def.singular} » pour
+                  commencer.
                 </TableCell>
               </TableRow>
             ) : (
@@ -285,8 +300,8 @@ export function CollectionManager({ def }: { def: CollectionDef }) {
                         variant="ghost"
                         size="icon-sm"
                         onClick={() => {
-                          setEditing(item)
-                          setOpen(true)
+                          setEditing(item);
+                          setOpen(true);
                         }}
                       >
                         <Pencil className="h-4 w-4" />
@@ -312,7 +327,7 @@ export function CollectionManager({ def }: { def: CollectionDef }) {
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>
-              {editing ? 'Modifier' : 'Nouvelle'} {def.singular}
+              {editing ? "Modifier" : "Nouvelle"} {def.singular}
             </DialogTitle>
           </DialogHeader>
           {open && (
@@ -335,11 +350,11 @@ export function CollectionManager({ def }: { def: CollectionDef }) {
         confirmLabel="Supprimer"
         onConfirm={() => {
           if (deleteId) {
-            deleteMutation.mutate(deleteId)
-            setDeleteId(null)
+            deleteMutation.mutate(deleteId);
+            setDeleteId(null);
           }
         }}
       />
     </div>
-  )
+  );
 }
