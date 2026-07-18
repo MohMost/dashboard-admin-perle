@@ -85,6 +85,7 @@ export const MOCK_MEMBERS: Member[] = Array.from({ length: 80 }, (_, i) => {
   const createdAt = new Date(Date.now() - Math.random() * 1000 * 60 * 60 * 24 * 365).toISOString()
   return {
     id: `m${i + 1}`,
+    username: `${firstName.toLowerCase()}.${lastName.toLowerCase()}${i}`,
     email: `${firstName.toLowerCase()}.${lastName.toLowerCase()}${i}@example.com`,
     firstName,
     lastName,

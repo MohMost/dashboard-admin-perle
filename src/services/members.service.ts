@@ -10,9 +10,9 @@ import type { Member, MemberFilters, MemberStatus, PaginatedResponse } from '@/t
 
 interface BackendMember {
   id: string
-  firstName: string
-  lastName: string
-  email: string
+  firstName: string | null
+  lastName: string | null
+  email: string | null
   username: string
   status: 'PENDING' | 'ACTIVE' | 'SUSPENDED'
   isActivated: boolean
@@ -34,9 +34,11 @@ function mapStatus(s: BackendMember['status']): MemberStatus {
 function mapMember(u: BackendMember): Member {
   return {
     id: u.id,
-    email: u.email,
-    firstName: u.firstName,
-    lastName: u.lastName,
+    username: u.username,
+    // Accounts are username-only now (privacy); name/email are usually null.
+    email: u.email ?? '',
+    firstName: u.firstName ?? '',
+    lastName: u.lastName ?? '',
     status: mapStatus(u.status),
     // No per-member access code in the global-code model — show the code the
     // member activated with (or a dash while still pending).

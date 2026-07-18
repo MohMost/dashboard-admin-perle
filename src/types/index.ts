@@ -69,6 +69,7 @@ export interface AdminUser {
 
 export interface Member {
   id: string;
+  username: string;
   email: string;
   firstName: string;
   lastName: string;

@@ -62,7 +62,7 @@ import { StatusBadge } from "@/components/shared/StatusBadge";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { DataTablePagination } from "@/components/shared/DataTablePagination";
 import { MemberFormDialog } from "./MemberFormDialog";
-import { formatDate, getInitials, exportToCSV } from "@/lib/utils";
+import { formatDate, exportToCSV } from "@/lib/utils";
 import { useDebounce } from "@/hooks/use-debounce";
 import type { Member, MemberStatus } from "@/types";
 
@@ -165,23 +165,30 @@ export function MembersPage() {
         enableHiding: false,
       },
       {
-        accessorKey: "name",
+        accessorKey: "username",
         header: "Membre",
-        cell: ({ row: { original: m } }) => (
-          <div className="flex items-center gap-3">
-            <Avatar className="h-8 w-8">
-              <AvatarFallback className="text-xs">
-                {getInitials(m.firstName, m.lastName)}
-              </AvatarFallback>
-            </Avatar>
-            <div>
-              <p className="font-medium text-sm">
-                {m.firstName} {m.lastName}
-              </p>
-              <p className="text-xs text-muted-foreground">{m.email}</p>
+        cell: ({ row: { original: m } }) => {
+          // Accounts are username-only (privacy). Show the username as the
+          // identity; fall back to name/email only if a legacy account has them.
+          const fullName = `${m.firstName} ${m.lastName}`.trim();
+          return (
+            <div className="flex items-center gap-3">
+              <Avatar className="h-8 w-8">
+                <AvatarFallback className="text-xs">
+                  {m.username.slice(0, 2).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <p className="font-medium text-sm">@{m.username}</p>
+                {(fullName || m.email) && (
+                  <p className="text-xs text-muted-foreground">
+                    {fullName || m.email}
+                  </p>
+                )}
+              </div>
             </div>
-          </div>
-        ),
+          );
+        },
       },
       {
         accessorKey: "status",
