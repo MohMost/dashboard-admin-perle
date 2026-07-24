@@ -30,6 +30,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
+import { ImageUploadField } from "@/components/shared/ImageUploadField";
+import { CategoryCombobox } from "@/components/shared/CategoryCombobox";
 import { Skeleton } from "@/components/ui/skeleton";
 import { contentService, type ContentRecord } from "@/services/content.service";
 import type { CollectionDef, FieldDef } from "./content-config";
@@ -105,6 +107,14 @@ function Field({
             onCheckedChange={(v) => onChange(v)}
           />
         </div>
+      ) : field.type === "imageUrl" ? (
+        <ImageUploadField value={String(value)} onChange={(v) => onChange(v)} />
+      ) : field.type === "category" ? (
+        <CategoryCombobox
+          scope={field.scope ?? ""}
+          value={String(value)}
+          onChange={(v) => onChange(v)}
+        />
       ) : field.type === "select" ? (
         <Select value={String(value)} onValueChange={(v) => onChange(v)}>
           <SelectTrigger>
@@ -134,12 +144,6 @@ function Field({
           placeholder={field.placeholder}
           onChange={(e) => onChange(e.target.value)}
         />
-      )}
-      {field.type === "imageUrl" && (
-        <p className="text-xs text-muted-foreground">
-          Collez l'URL d'une image hébergée. L'upload direct sera ajouté plus
-          tard.
-        </p>
       )}
     </div>
   );

@@ -2,7 +2,7 @@ import { useLocation, Link } from 'react-router-dom'
 import {
   // LayoutDashboard, // used only by the disabled "Vue d'ensemble" analytics nav item
   // Users, // used only by the disabled "Utilisateurs" (admin users) nav item
-  UserCheck, FileText, CalendarDays, Settings, Sparkles, LogOut, ChevronRight,
+  UserCheck, FileText, CalendarDays, Star, Settings, Sparkles, LogOut, ChevronRight,
 } from 'lucide-react'
 import {
   Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent,
@@ -28,6 +28,7 @@ const navItems = [
   // { title: 'Utilisateurs', href: '/dashboard/users', icon: Users },
   { title: 'Contenus', href: '/dashboard/content', icon: FileText },
   { title: 'Événements', href: '/dashboard/events', icon: CalendarDays },
+  { title: 'Avis clientes', href: '/dashboard/reviews', icon: Star },
   { title: 'Paramètres', href: '/dashboard/settings', icon: Settings },
 ]
 

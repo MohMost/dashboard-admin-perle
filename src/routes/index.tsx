@@ -10,6 +10,7 @@ import { MembersPage } from '@/pages/members/MembersPage'
 // import { UsersPage } from '@/pages/users/UsersPage' // "Utilisateurs" hidden — see AppSidebar
 import { ContentPage } from '@/pages/content/ContentPage'
 import { EventsPage } from '@/pages/events/EventsPage'
+import { ReviewsPage } from '@/pages/reviews/ReviewsPage'
 import { SettingsPage } from '@/pages/settings/SettingsPage'
 import { NotFoundPage } from '@/pages/NotFoundPage'
 
@@ -37,6 +38,7 @@ export const router = createBrowserRouter([
       // { path: 'users', element: <UsersPage /> }, // "Utilisateurs" hidden — see AppSidebar
       { path: 'content', element: <ContentPage /> },
       { path: 'events', element: <EventsPage /> },
+      { path: 'reviews', element: <ReviewsPage /> },
       { path: 'settings', element: <SettingsPage /> },
     ],
   },

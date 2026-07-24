@@ -208,23 +208,12 @@ export interface AccessSettings {
   allowRegistration: boolean;
   emailVerification: boolean;
   memberApproval: boolean;
-  accessCodeExpireDays: number;
   maxLoginAttempts: number;
-}
-
-export interface EmailSettings {
-  fromName: string;
-  fromEmail: string;
-  replyToEmail: string;
-  emailFooter: string;
-  invitationSubject: string;
-  invitationBody: string;
 }
 
 export interface AppSettings {
   platform: PlatformSettings;
   access: AccessSettings;
-  email: EmailSettings;
 }
 
 // ============================================================

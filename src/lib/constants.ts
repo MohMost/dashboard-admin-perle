@@ -18,7 +18,6 @@ export const PAGINATION_LIMITS = [10, 25, 50, 100]
 export const DEFAULT_PAGE_LIMIT = 10
 
 export const ACCESS_CODE_LENGTH = 8
-export const ACCESS_CODE_EXPIRE_DAYS = 30
 
 export const CONTENT_TYPES = [
   { value: 'article', label: 'Article' },

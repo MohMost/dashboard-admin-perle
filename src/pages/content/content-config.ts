@@ -11,6 +11,7 @@ export type FieldType =
   | 'number'
   | 'boolean'
   | 'select'
+  | 'category'
   | 'linesList'
   | 'keyValueLines'
 
@@ -20,6 +21,8 @@ export interface FieldDef {
   type: FieldType
   options?: { value: string; label: string }[]
   placeholder?: string
+  // For type 'category': the category namespace on the backend (recipe/video/…).
+  scope?: string
 }
 
 export interface CollectionDef {
@@ -46,7 +49,7 @@ export const COLLECTIONS: CollectionDef[] = [
     fields: [
       { name: 'title', label: 'Titre', type: 'text' },
       { name: 'image', label: 'Image', type: 'imageUrl' },
-      { name: 'category', label: 'Catégorie', type: 'text' },
+      { name: 'category', label: 'Catégorie', type: 'category', scope: 'recipe' },
       {
         name: 'difficulty',
         label: 'Difficulté',
@@ -61,6 +64,12 @@ export const COLLECTIONS: CollectionDef[] = [
       { name: 'portions', label: 'Portions', type: 'number' },
       { name: 'description', label: 'Description', type: 'textarea' },
       { name: 'cookidooUrl', label: 'Lien Cookidoo', type: 'text' },
+      {
+        name: 'vimeoUrl',
+        label: 'Lien Vimeo (vidéo de la recette)',
+        type: 'text',
+        placeholder: 'https://vimeo.com/17433286?h=6bcdf4c934',
+      },
       { name: 'isNew', label: 'Marquer comme nouveau', type: 'boolean' },
       {
         name: 'ingredients',
@@ -87,7 +96,7 @@ export const COLLECTIONS: CollectionDef[] = [
     fields: [
       { name: 'title', label: 'Titre', type: 'text' },
       { name: 'image', label: 'Miniature', type: 'imageUrl' },
-      { name: 'category', label: 'Catégorie', type: 'text' },
+      { name: 'category', label: 'Catégorie', type: 'category', scope: 'video' },
       { name: 'duration', label: 'Durée', type: 'text', placeholder: '18:42' },
       {
         name: 'vimeoUrl',
@@ -110,7 +119,7 @@ export const COLLECTIONS: CollectionDef[] = [
     fields: [
       { name: 'title', label: 'Titre', type: 'text' },
       { name: 'image', label: 'Image', type: 'imageUrl' },
-      { name: 'category', label: 'Catégorie', type: 'text' },
+      { name: 'category', label: 'Catégorie', type: 'category', scope: 'article' },
       { name: 'readTime', label: 'Temps de lecture', type: 'text', placeholder: '4 min' },
       { name: 'excerpt', label: 'Extrait', type: 'textarea' },
     ],
@@ -200,6 +209,12 @@ export const EVENTS_DEF: CollectionDef = {
       name: 'remindMinutesBefore',
       label: "Rappel — minutes avant l'événement (0 = à l'heure pile)",
       type: 'number',
+    },
+    {
+      name: 'vimeoUrl',
+      label: 'Lien du live (Vimeo)',
+      type: 'text',
+      placeholder: 'https://vimeo.com/17433286?h=6bcdf4c934',
     },
     { name: 'description', label: 'Description (optionnel)', type: 'textarea' },
   ],

@@ -7,7 +7,6 @@ import { Save, RotateCcw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
 import { Separator } from '@/components/ui/separator'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
@@ -26,22 +25,11 @@ const accessSchema = z.object({
   allowRegistration: z.boolean(),
   emailVerification: z.boolean(),
   memberApproval: z.boolean(),
-  accessCodeExpireDays: z.number().min(1).max(365),
   maxLoginAttempts: z.number().min(1).max(20),
-})
-
-const emailSchema = z.object({
-  fromName: z.string().min(1, 'Requis'),
-  fromEmail: z.string().email('Email invalide'),
-  replyToEmail: z.string().email('Email invalide'),
-  emailFooter: z.string(),
-  invitationSubject: z.string().min(1, 'Requis'),
-  invitationBody: z.string().min(1, 'Requis'),
 })
 
 type PlatformFormData = z.infer<typeof platformSchema>
 type AccessFormData = z.infer<typeof accessSchema>
-type EmailFormData = z.infer<typeof emailSchema>
 
 function PlatformSettings() {
   const { settings, updatePlatform } = useSettingsStore()
@@ -137,78 +125,9 @@ function AccessSettings() {
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
-          <Label>Expiration des codes d'accès (jours)</Label>
-          <Input type="number" min={1} max={365} {...register('accessCodeExpireDays')} className={errors.accessCodeExpireDays ? 'border-destructive' : ''} />
-          {errors.accessCodeExpireDays && <p className="text-xs text-destructive">{errors.accessCodeExpireDays.message}</p>}
-        </div>
-        <div className="space-y-2">
           <Label>Tentatives de connexion max</Label>
           <Input type="number" min={1} max={20} {...register('maxLoginAttempts')} className={errors.maxLoginAttempts ? 'border-destructive' : ''} />
           {errors.maxLoginAttempts && <p className="text-xs text-destructive">{errors.maxLoginAttempts.message}</p>}
-        </div>
-      </div>
-
-      <div className="flex justify-end">
-        <Button type="submit" disabled={!isDirty}>
-          <Save className="h-4 w-4 mr-2" />Sauvegarder
-        </Button>
-      </div>
-    </form>
-  )
-}
-
-function EmailSettings() {
-  const { settings, updateEmail } = useSettingsStore()
-
-  const { register, handleSubmit, reset, formState: { errors, isDirty } } = useForm<EmailFormData>({
-    resolver: zodResolver(emailSchema),
-    defaultValues: settings.email,
-  })
-
-  useEffect(() => { reset(settings.email) }, [settings.email, reset])
-
-  const onSubmit = (data: EmailFormData) => {
-    updateEmail(data)
-    toast.success('Paramètres email sauvegardés')
-    reset(data)
-  }
-
-  return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className="space-y-2">
-          <Label>Nom d'expéditeur</Label>
-          <Input {...register('fromName')} className={errors.fromName ? 'border-destructive' : ''} />
-          {errors.fromName && <p className="text-xs text-destructive">{errors.fromName.message}</p>}
-        </div>
-        <div className="space-y-2">
-          <Label>Email d'expéditeur</Label>
-          <Input type="email" {...register('fromEmail')} className={errors.fromEmail ? 'border-destructive' : ''} />
-          {errors.fromEmail && <p className="text-xs text-destructive">{errors.fromEmail.message}</p>}
-        </div>
-        <div className="space-y-2">
-          <Label>Email de réponse</Label>
-          <Input type="email" {...register('replyToEmail')} className={errors.replyToEmail ? 'border-destructive' : ''} />
-          {errors.replyToEmail && <p className="text-xs text-destructive">{errors.replyToEmail.message}</p>}
-        </div>
-      </div>
-
-      <Separator />
-
-      <div className="space-y-4">
-        <div className="space-y-2">
-          <Label>Objet de l'invitation</Label>
-          <Input {...register('invitationSubject')} className={errors.invitationSubject ? 'border-destructive' : ''} />
-          {errors.invitationSubject && <p className="text-xs text-destructive">{errors.invitationSubject.message}</p>}
-        </div>
-        <div className="space-y-2">
-          <Label>Corps de l'invitation</Label>
-          <Textarea {...register('invitationBody')} rows={4} className={errors.invitationBody ? 'border-destructive' : ''} />
-          {errors.invitationBody && <p className="text-xs text-destructive">{errors.invitationBody.message}</p>}
-        </div>
-        <div className="space-y-2">
-          <Label>Pied de page email</Label>
-          <Textarea {...register('emailFooter')} rows={2} />
         </div>
       </div>
 
@@ -245,7 +164,6 @@ export function SettingsPage() {
         <TabsList>
           <TabsTrigger value="platform">Plateforme</TabsTrigger>
           <TabsTrigger value="access">Accès</TabsTrigger>
-          <TabsTrigger value="email">Email</TabsTrigger>
         </TabsList>
 
         <TabsContent value="platform" className="mt-6">
@@ -269,18 +187,6 @@ export function SettingsPage() {
             </CardHeader>
             <CardContent>
               <AccessSettings />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="email" className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Configuration email</CardTitle>
-              <CardDescription>Personnalisez les emails envoyés à vos membres.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <EmailSettings />
             </CardContent>
           </Card>
         </TabsContent>
