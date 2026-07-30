@@ -25,6 +25,7 @@ export interface WelcomeMessage {
   id: string
   subject: string
   body: string
+  image?: string | null
   updatedAt: string
 }
 export interface Founder {
@@ -73,7 +74,7 @@ export const contentService = {
 
   // Singletons
   getWelcomeMessage: () => apiFetch<WelcomeMessage>('/content/welcome-message'),
-  setWelcomeMessage: (body: { subject: string; body: string }) =>
+  setWelcomeMessage: (body: { subject: string; body: string; image?: string }) =>
     apiFetch<WelcomeMessage>('/admin/content/welcome-message', {
       method: 'PUT',
       body,

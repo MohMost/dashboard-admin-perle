@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
+import { ImageUploadField } from '@/components/shared/ImageUploadField'
 import { contentService } from '@/services/content.service'
 import { ApiError } from '@/lib/api-client'
 
@@ -14,6 +15,7 @@ import { ApiError } from '@/lib/api-client'
 export function WelcomeMessageEditor() {
   const [subject, setSubject] = useState('')
   const [body, setBody] = useState('')
+  const [image, setImage] = useState('')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
 
@@ -25,6 +27,7 @@ export function WelcomeMessageEditor() {
         if (!active) return
         setSubject(m.subject)
         setBody(m.body)
+        setImage(m.image ?? '')
       })
       .catch((e) => toast.error(e instanceof ApiError ? e.message : 'Erreur de chargement.'))
       .finally(() => active && setLoading(false))
@@ -36,7 +39,7 @@ export function WelcomeMessageEditor() {
   const onSave = async () => {
     setSaving(true)
     try {
-      await contentService.setWelcomeMessage({ subject: subject.trim(), body })
+      await contentService.setWelcomeMessage({ subject: subject.trim(), body, image })
       toast.success("Message d'accueil enregistré")
     } catch (e) {
       toast.error(e instanceof ApiError ? e.message : 'Erreur.')
@@ -65,6 +68,10 @@ export function WelcomeMessageEditor() {
             <div className="space-y-1.5">
               <Label>Message</Label>
               <Textarea rows={12} value={body} onChange={(e) => setBody(e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Image (optionnel)</Label>
+              <ImageUploadField value={image} onChange={setImage} />
             </div>
             <div className="flex justify-end">
               <Button onClick={onSave} disabled={saving || !subject.trim() || !body.trim()}>
@@ -142,11 +149,8 @@ export function FounderEditor() {
               </div>
             </div>
             <div className="space-y-1.5">
-              <Label>Photo (URL)</Label>
-              <Input value={form.avatar} onChange={(e) => set('avatar', e.target.value)} placeholder="https://…" />
-              <p className="text-xs text-muted-foreground">
-                Collez l'URL d'une image hébergée. L'upload direct sera ajouté plus tard.
-              </p>
+              <Label>Photo</Label>
+              <ImageUploadField value={form.avatar} onChange={(v) => set('avatar', v)} />
             </div>
             <div className="space-y-1.5">
               <Label>Bio</Label>

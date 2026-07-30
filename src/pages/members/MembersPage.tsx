@@ -22,7 +22,6 @@ import {
   RefreshCw,
   MoreHorizontal,
   Copy,
-  Mail,
   Ban,
   CheckCircle,
   Trash2,
@@ -268,12 +267,14 @@ export function MembersPage() {
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Régénérer le code
               </DropdownMenuItem>
+              {/* "Renvoyer invitation" masqué (aucun envoi d'email réel).
               <DropdownMenuItem
                 onClick={() => toast.info("Email d'invitation envoyé (simulé)")}
               >
                 <Mail className="h-4 w-4 mr-2" />
                 Renvoyer invitation
               </DropdownMenuItem>
+              */}
               <DropdownMenuSeparator />
               {m.status === "active" ? (
                 <DropdownMenuItem
