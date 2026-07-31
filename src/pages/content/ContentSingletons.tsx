@@ -8,6 +8,8 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ImageUploadField } from '@/components/shared/ImageUploadField'
+import { MultiImageField } from '@/components/shared/MultiImageField'
+import { RichTextField } from '@/components/shared/RichTextField'
 import { contentService } from '@/services/content.service'
 import { ApiError } from '@/lib/api-client'
 
@@ -252,6 +254,242 @@ export function LandingEditor() {
             </div>
             <div className="flex justify-end">
               <Button onClick={onSave} disabled={saving || !valid}>
+                <Save className="h-4 w-4 mr-2" />
+                {saving ? 'Enregistrement…' : 'Enregistrer'}
+              </Button>
+            </div>
+          </>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
+
+// "À propos" page — branded image + rich-text body.
+export function AboutEditor() {
+  const [image, setImage] = useState('')
+  const [body, setBody] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    let active = true
+    contentService
+      .getAbout()
+      .then((a) => {
+        if (!active) return
+        setImage(a.image ?? '')
+        setBody(a.body)
+      })
+      .catch((e) => toast.error(e instanceof ApiError ? e.message : 'Erreur de chargement.'))
+      .finally(() => active && setLoading(false))
+    return () => {
+      active = false
+    }
+  }, [])
+
+  const onSave = async () => {
+    setSaving(true)
+    try {
+      await contentService.setAbout({ image, body })
+      toast.success('« À propos » enregistré')
+    } catch (e) {
+      toast.error(e instanceof ApiError ? e.message : 'Erreur.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>À propos</CardTitle>
+        <CardDescription>
+          La page « À propos » de l'application (accessible depuis l'accueil).
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {loading ? (
+          <Skeleton className="h-40 w-full" />
+        ) : (
+          <>
+            <div className="space-y-1.5">
+              <Label>Image</Label>
+              <ImageUploadField value={image} onChange={setImage} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Contenu</Label>
+              <RichTextField value={body} onChange={setBody} />
+            </div>
+            <div className="flex justify-end">
+              <Button onClick={onSave} disabled={saving}>
+                <Save className="h-4 w-4 mr-2" />
+                {saving ? 'Enregistrement…' : 'Enregistrer'}
+              </Button>
+            </div>
+          </>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
+
+// "Qui suis-je ?" page — bio + image grid + photo carousel + testimonial quote.
+export function WhoAmIEditor() {
+  const [form, setForm] = useState({
+    bio: '',
+    gridImages: [] as string[],
+    carouselImages: [] as string[],
+    quote: '',
+  })
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const set = <K extends keyof typeof form>(k: K, v: (typeof form)[K]) =>
+    setForm((p) => ({ ...p, [k]: v }))
+
+  useEffect(() => {
+    let active = true
+    contentService
+      .getWhoAmI()
+      .then((w) => {
+        if (!active) return
+        setForm({
+          bio: w.bio,
+          gridImages: w.gridImages ?? [],
+          carouselImages: w.carouselImages ?? [],
+          quote: w.quote,
+        })
+      })
+      .catch((e) => toast.error(e instanceof ApiError ? e.message : 'Erreur de chargement.'))
+      .finally(() => active && setLoading(false))
+    return () => {
+      active = false
+    }
+  }, [])
+
+  const onSave = async () => {
+    setSaving(true)
+    try {
+      await contentService.setWhoAmI({
+        bio: form.bio.trim(),
+        gridImages: form.gridImages.filter(Boolean),
+        carouselImages: form.carouselImages.filter(Boolean),
+        quote: form.quote.trim(),
+      })
+      toast.success('« Qui suis-je ? » enregistré')
+    } catch (e) {
+      toast.error(e instanceof ApiError ? e.message : 'Erreur.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Qui suis-je ?</CardTitle>
+        <CardDescription>
+          Votre présentation : biographie, photos et le « mot de Ghania ».
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {loading ? (
+          <Skeleton className="h-40 w-full" />
+        ) : (
+          <>
+            <div className="space-y-1.5">
+              <Label>Biographie</Label>
+              <Textarea rows={5} value={form.bio} onChange={(e) => set('bio', e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Galerie (grille)</Label>
+              <MultiImageField
+                value={form.gridImages}
+                onChange={(v) => set('gridImages', v)}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Carrousel photos</Label>
+              <MultiImageField
+                value={form.carouselImages}
+                onChange={(v) => set('carouselImages', v)}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Un mot de Ghania (citation)</Label>
+              <Textarea rows={3} value={form.quote} onChange={(e) => set('quote', e.target.value)} />
+            </div>
+            <div className="flex justify-end">
+              <Button onClick={onSave} disabled={saving}>
+                <Save className="h-4 w-4 mr-2" />
+                {saving ? 'Enregistrement…' : 'Enregistrer'}
+              </Button>
+            </div>
+          </>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
+
+// Legal texts (Politique de confidentialité + Conditions générales).
+export function LegalEditor() {
+  const [privacy, setPrivacy] = useState('')
+  const [terms, setTerms] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    let active = true
+    contentService
+      .getLegal()
+      .then((l) => {
+        if (!active) return
+        setPrivacy(l.privacy)
+        setTerms(l.terms)
+      })
+      .catch((e) => toast.error(e instanceof ApiError ? e.message : 'Erreur de chargement.'))
+      .finally(() => active && setLoading(false))
+    return () => {
+      active = false
+    }
+  }, [])
+
+  const onSave = async () => {
+    setSaving(true)
+    try {
+      await contentService.setLegal({ privacy, terms })
+      toast.success('Mentions légales enregistrées')
+    } catch (e) {
+      toast.error(e instanceof ApiError ? e.message : 'Erreur.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Mentions légales</CardTitle>
+        <CardDescription>
+          Textes affichés dans l'application (popups) et à l'inscription.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {loading ? (
+          <Skeleton className="h-40 w-full" />
+        ) : (
+          <>
+            <div className="space-y-1.5">
+              <Label>Politique de confidentialité</Label>
+              <RichTextField value={privacy} onChange={setPrivacy} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Conditions générales</Label>
+              <RichTextField value={terms} onChange={setTerms} />
+            </div>
+            <div className="flex justify-end">
+              <Button onClick={onSave} disabled={saving}>
                 <Save className="h-4 w-4 mr-2" />
                 {saving ? 'Enregistrement…' : 'Enregistrer'}
               </Button>

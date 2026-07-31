@@ -44,6 +44,26 @@ export interface Landing {
   image?: string | null
   updatedAt: string
 }
+export interface About {
+  id: string
+  image?: string | null
+  body: string
+  updatedAt: string
+}
+export interface WhoAmI {
+  id: string
+  bio: string
+  gridImages: string[]
+  carouselImages: string[]
+  quote: string
+  updatedAt: string
+}
+export interface Legal {
+  id: string
+  privacy: string
+  terms: string
+  updatedAt: string
+}
 
 export type ContentCollection =
   | 'recipes'
@@ -102,4 +122,20 @@ export const contentService = {
     description: string
     image?: string
   }) => apiFetch<Landing>('/admin/content/landing', { method: 'PUT', body }),
+
+  getAbout: () => apiFetch<About>('/content/about'),
+  setAbout: (body: { image?: string; body: string }) =>
+    apiFetch<About>('/admin/content/about', { method: 'PUT', body }),
+
+  getWhoAmI: () => apiFetch<WhoAmI>('/content/who-am-i'),
+  setWhoAmI: (body: {
+    bio: string
+    gridImages: string[]
+    carouselImages: string[]
+    quote: string
+  }) => apiFetch<WhoAmI>('/admin/content/who-am-i', { method: 'PUT', body }),
+
+  getLegal: () => apiFetch<Legal>('/content/legal'),
+  setLegal: (body: { privacy: string; terms: string }) =>
+    apiFetch<Legal>('/admin/content/legal', { method: 'PUT', body }),
 }
