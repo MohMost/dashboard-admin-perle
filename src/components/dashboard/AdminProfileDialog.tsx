@@ -87,12 +87,19 @@ export function AdminProfileDialog({
           </div>
           <div className="space-y-1.5">
             <Label>Email</Label>
-            <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+            <Input
+              type="email"
+              autoComplete="off"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
           </div>
           <div className="space-y-1.5">
             <Label>Nouveau mot de passe</Label>
             <Input
               type="password"
+              // Prevent browser autofill from silently changing the password.
+              autoComplete="new-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Laisser vide pour ne pas changer"
