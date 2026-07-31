@@ -22,6 +22,7 @@ import {
   RefreshCw,
   MoreHorizontal,
   Copy,
+  Pencil,
   Ban,
   CheckCircle,
   Trash2,
@@ -252,6 +253,7 @@ export function MembersPage() {
                   setFormOpen(true);
                 }}
               >
+                <Pencil className="h-4 w-4 mr-2" />
                 Modifier
               </DropdownMenuItem>
               <DropdownMenuItem

@@ -21,8 +21,19 @@ import {
 } from '@/components/ui/table'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
-import { reviewsService, type ReviewStatus } from '@/services/reviews.service'
+import {
+  reviewsService,
+  type Review,
+  type ReviewStatus,
+} from '@/services/reviews.service'
 import { formatDate } from '@/lib/utils'
 
 const STATUS_LABEL: Record<ReviewStatus, string> = {
@@ -63,6 +74,7 @@ export function ReviewsPage() {
     'PENDING',
   )
   const [deleteId, setDeleteId] = useState<string | null>(null)
+  const [selected, setSelected] = useState<Review | null>(null)
 
   const { data: rows = [], isLoading } = useQuery({
     queryKey: ['reviews', statusFilter],
@@ -162,17 +174,19 @@ export function ReviewsPage() {
                   </TableRow>
                 ) : (
                   rows.map((r) => (
-                    <TableRow key={r.id}>
+                    <TableRow
+                      key={r.id}
+                      className="cursor-pointer"
+                      onClick={() => setSelected(r)}
+                    >
                       <TableCell className="whitespace-nowrap font-medium">
                         @{r.user?.username ?? '—'}
                       </TableCell>
                       <TableCell>
                         <Stars rating={r.rating} />
                       </TableCell>
-                      <TableCell className="max-w-md">
-                        <p className="whitespace-pre-wrap text-sm">
-                          {r.comment}
-                        </p>
+                      <TableCell className="max-w-xs">
+                        <p className="truncate text-sm">{r.comment}</p>
                       </TableCell>
                       <TableCell>
                         <Badge variant={STATUS_VARIANT[r.status]}>
@@ -182,7 +196,10 @@ export function ReviewsPage() {
                       <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
                         {formatDate(r.createdAt)}
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell
+                        className="text-right"
+                        onClick={(e) => e.stopPropagation()}
+                      >
                         <div className="flex justify-end gap-1">
                           {r.status !== 'APPROVED' && (
                             <Button
@@ -235,6 +252,77 @@ export function ReviewsPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Full-review detail with moderation actions in the footer. */}
+      <Dialog open={!!selected} onOpenChange={(o) => !o && setSelected(null)}>
+        <DialogContent className="max-w-lg">
+          {selected && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-3">
+                  <span>@{selected.user?.username ?? '—'}</span>
+                  <Badge variant={STATUS_VARIANT[selected.status]}>
+                    {STATUS_LABEL[selected.status]}
+                  </Badge>
+                </DialogTitle>
+              </DialogHeader>
+              <div className="space-y-3">
+                <Stars rating={selected.rating} />
+                <p className="whitespace-pre-wrap text-sm text-foreground">
+                  {selected.comment}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {formatDate(selected.createdAt)}
+                </p>
+              </div>
+              <DialogFooter className="gap-2 sm:justify-between">
+                <Button
+                  variant="outline"
+                  className="text-destructive"
+                  onClick={() => {
+                    setDeleteId(selected.id)
+                    setSelected(null)
+                  }}
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Supprimer
+                </Button>
+                <div className="flex gap-2">
+                  {selected.status !== 'REJECTED' && (
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        moderateMutation.mutate({
+                          id: selected.id,
+                          status: 'REJECTED',
+                        })
+                        setSelected(null)
+                      }}
+                    >
+                      <Ban className="h-4 w-4 mr-2" />
+                      Rejeter
+                    </Button>
+                  )}
+                  {selected.status !== 'APPROVED' && (
+                    <Button
+                      onClick={() => {
+                        moderateMutation.mutate({
+                          id: selected.id,
+                          status: 'APPROVED',
+                        })
+                        setSelected(null)
+                      }}
+                    >
+                      <Check className="h-4 w-4 mr-2" />
+                      Approuver
+                    </Button>
+                  )}
+                </div>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
 
       <ConfirmDialog
         open={!!deleteId}

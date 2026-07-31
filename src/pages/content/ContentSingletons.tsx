@@ -168,3 +168,97 @@ export function FounderEditor() {
     </Card>
   )
 }
+
+// Pre-login landing screen — the very first screen a logged-out client sees.
+export function LandingEditor() {
+  const [form, setForm] = useState({
+    tagline: '',
+    title: '',
+    description: '',
+    image: '',
+  })
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const set = (k: keyof typeof form, v: string) =>
+    setForm((p) => ({ ...p, [k]: v }))
+
+  useEffect(() => {
+    let active = true
+    contentService
+      .getLanding()
+      .then((l) => {
+        if (!active) return
+        setForm({
+          tagline: l.tagline,
+          title: l.title,
+          description: l.description,
+          image: l.image ?? '',
+        })
+      })
+      .catch((e) => toast.error(e instanceof ApiError ? e.message : 'Erreur de chargement.'))
+      .finally(() => active && setLoading(false))
+    return () => {
+      active = false
+    }
+  }, [])
+
+  const onSave = async () => {
+    setSaving(true)
+    try {
+      await contentService.setLanding({
+        tagline: form.tagline.trim(),
+        title: form.title.trim(),
+        description: form.description.trim(),
+        image: form.image,
+      })
+      toast.success("Écran d'accueil enregistré")
+    } catch (e) {
+      toast.error(e instanceof ApiError ? e.message : 'Erreur.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const valid = form.tagline && form.title && form.description
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Écran d'accueil (avant connexion)</CardTitle>
+        <CardDescription>
+          Le tout premier écran que voient vos clientes, avant de se connecter.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {loading ? (
+          <Skeleton className="h-40 w-full" />
+        ) : (
+          <>
+            <div className="space-y-1.5">
+              <Label>Petit texte (badge)</Label>
+              <Input value={form.tagline} onChange={(e) => set('tagline', e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Titre</Label>
+              <Input value={form.title} onChange={(e) => set('title', e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Description</Label>
+              <Textarea rows={4} value={form.description} onChange={(e) => set('description', e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Image d'accueil</Label>
+              <ImageUploadField value={form.image} onChange={(v) => set('image', v)} />
+            </div>
+            <div className="flex justify-end">
+              <Button onClick={onSave} disabled={saving || !valid}>
+                <Save className="h-4 w-4 mr-2" />
+                {saving ? 'Enregistrement…' : 'Enregistrer'}
+              </Button>
+            </div>
+          </>
+        )}
+      </CardContent>
+    </Card>
+  )
+}

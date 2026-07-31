@@ -9,12 +9,14 @@ import {
   SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem,
   SidebarRail,
 } from '@/components/ui/sidebar'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { useState } from 'react'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { useAuthStore } from '@/store/auth.store'
 import { getInitials } from '@/lib/utils'
 import { ROLES } from '@/lib/constants'
 import { ModeToggle } from '@/components/mode-toggle'
+import { AdminProfileDialog } from '@/components/dashboard/AdminProfileDialog'
 
 const navItems = [
   // Analytics overview ("Vue d'ensemble") removed at client request (2026-07-18)
@@ -35,6 +37,7 @@ const navItems = [
 export function AppSidebar() {
   const location = useLocation()
   const { user, logout } = useAuthStore()
+  const [profileOpen, setProfileOpen] = useState(false)
 
   const isActive = (href: string) => {
     if (href === '/dashboard') return location.pathname === '/dashboard'
@@ -93,8 +96,14 @@ export function AppSidebar() {
             </div>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg" className="h-auto py-2">
+            <SidebarMenuButton
+              size="lg"
+              className="h-auto py-2"
+              tooltip="Mon profil"
+              onClick={() => setProfileOpen(true)}
+            >
               <Avatar className="size-8 shrink-0">
+                {user?.avatar ? <AvatarImage src={user.avatar} alt="" /> : null}
                 <AvatarFallback className="text-xs">
                   {user ? getInitials(user.firstName, user.lastName) : 'U'}
                 </AvatarFallback>
@@ -124,6 +133,8 @@ export function AppSidebar() {
       </SidebarFooter>
 
       <SidebarRail />
+
+      <AdminProfileDialog open={profileOpen} onOpenChange={setProfileOpen} />
     </Sidebar>
   )
 }

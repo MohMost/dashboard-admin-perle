@@ -36,6 +36,14 @@ export interface Founder {
   avatar: string
   updatedAt: string
 }
+export interface Landing {
+  id: string
+  tagline: string
+  title: string
+  description: string
+  image?: string | null
+  updatedAt: string
+}
 
 export type ContentCollection =
   | 'recipes'
@@ -86,4 +94,12 @@ export const contentService = {
     bio: string
     avatar: string
   }) => apiFetch<Founder>('/admin/content/founder', { method: 'PUT', body }),
+
+  getLanding: () => apiFetch<Landing>('/content/landing'),
+  setLanding: (body: {
+    tagline: string
+    title: string
+    description: string
+    image?: string
+  }) => apiFetch<Landing>('/admin/content/landing', { method: 'PUT', body }),
 }

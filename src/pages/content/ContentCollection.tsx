@@ -32,6 +32,7 @@ import {
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { ImageUploadField } from "@/components/shared/ImageUploadField";
 import { CategoryCombobox } from "@/components/shared/CategoryCombobox";
+import { RichTextField } from "@/components/shared/RichTextField";
 import { Skeleton } from "@/components/ui/skeleton";
 import { contentService, type ContentRecord } from "@/services/content.service";
 import type { CollectionDef, FieldDef } from "./content-config";
@@ -83,6 +84,8 @@ function buildPayload(
           return { label: label ?? "", qty: qty ?? "" };
         })
         .filter((r) => r.label);
+    // Rich-text HTML must be preserved verbatim (don't .trim() away markup).
+    else if (f.type === "richtext") out[f.name] = String(val);
     else out[f.name] = String(val).trim();
   }
   return out;
@@ -115,6 +118,8 @@ function Field({
           value={String(value)}
           onChange={(v) => onChange(v)}
         />
+      ) : field.type === "richtext" ? (
+        <RichTextField value={String(value)} onChange={(v) => onChange(v)} />
       ) : field.type === "select" ? (
         <Select value={String(value)} onValueChange={(v) => onChange(v)}>
           <SelectTrigger>

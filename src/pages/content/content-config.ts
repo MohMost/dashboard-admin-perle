@@ -12,6 +12,7 @@ export type FieldType =
   | 'boolean'
   | 'select'
   | 'category'
+  | 'richtext'
   | 'linesList'
   | 'keyValueLines'
 
@@ -122,6 +123,7 @@ export const COLLECTIONS: CollectionDef[] = [
       { name: 'category', label: 'Catégorie', type: 'category', scope: 'article' },
       { name: 'readTime', label: 'Temps de lecture', type: 'text', placeholder: '4 min' },
       { name: 'excerpt', label: 'Extrait', type: 'textarea' },
+      { name: 'content', label: 'Contenu', type: 'richtext' },
     ],
   },
   {

@@ -1,7 +1,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { COLLECTIONS } from './content-config'
 import { CollectionManager } from './ContentCollection'
-import { FounderEditor, WelcomeMessageEditor } from './ContentSingletons'
+import { FounderEditor, LandingEditor, WelcomeMessageEditor } from './ContentSingletons'
 
 // Content management (BACKEND_PLAN.md Task 5b). One tab per content type the
 // native app shows, each wired to the backend content CRUD, plus the two
@@ -25,7 +25,8 @@ export function ContentPage() {
                 {c.label}
               </TabsTrigger>
             ))}
-            <TabsTrigger value="welcome">Message d'accueil</TabsTrigger>
+            <TabsTrigger value="landing">Écran d'accueil</TabsTrigger>
+            <TabsTrigger value="welcome">Message post-connexion</TabsTrigger>
             <TabsTrigger value="founder">Fondatrice</TabsTrigger>
           </TabsList>
         </div>
@@ -36,6 +37,9 @@ export function ContentPage() {
           </TabsContent>
         ))}
 
+        <TabsContent value="landing" className="mt-6">
+          <LandingEditor />
+        </TabsContent>
         <TabsContent value="welcome" className="mt-6">
           <WelcomeMessageEditor />
         </TabsContent>

@@ -8,27 +8,37 @@ import type { AuthResponse, AuthUser, LoginCredentials } from '@/types'
 
 interface BackendUser {
   id: string
-  firstName: string
-  lastName: string
-  email: string
+  firstName: string | null
+  lastName: string | null
+  email: string | null
   username: string
   role: 'MEMBER' | 'ADMIN'
   status: 'PENDING' | 'ACTIVE'
   isActivated: boolean
+  avatar?: string | null
   createdAt?: string
 }
 
 function mapUser(u: BackendUser): AuthUser {
   return {
     id: u.id,
-    email: u.email,
-    firstName: u.firstName,
-    lastName: u.lastName,
+    email: u.email ?? '',
+    firstName: u.firstName ?? '',
+    lastName: u.lastName ?? '',
     // The backend has MEMBER | ADMIN; the dashboard's richer role set maps
     // ADMIN → 'admin' (only admins get past the guard below).
     role: 'admin',
+    avatar: u.avatar ?? undefined,
     createdAt: u.createdAt ?? new Date().toISOString(),
   }
+}
+
+export interface UpdateProfilePayload {
+  firstName?: string
+  lastName?: string
+  email?: string
+  password?: string
+  avatar?: string
 }
 
 export const authService = {
@@ -57,4 +67,13 @@ export const authService = {
     authMock.resetPassword(token, password),
 
   me: (token: string): Promise<AuthResponse['user']> => authMock.me(token),
+
+  // Admin self-service credentials update → PATCH /api/auth/me (backend).
+  updateProfile: async (payload: UpdateProfilePayload): Promise<AuthUser> => {
+    const user = await apiFetch<BackendUser>('/auth/me', {
+      method: 'PATCH',
+      body: payload,
+    })
+    return mapUser(user)
+  },
 }
