@@ -47,15 +47,25 @@ export interface Landing {
 export interface About {
   id: string
   image?: string | null
+  title: string
   body: string
+  signature: string
   updatedAt: string
+}
+export interface Stat {
+  value: string
+  label: string
 }
 export interface WhoAmI {
   id: string
   bio: string
+  why: string
+  stats: Stat[]
   gridImages: string[]
   carouselImages: string[]
   quote: string
+  testimonialName: string
+  testimonialText: string
   updatedAt: string
 }
 export interface Legal {
@@ -124,15 +134,19 @@ export const contentService = {
   }) => apiFetch<Landing>('/admin/content/landing', { method: 'PUT', body }),
 
   getAbout: () => apiFetch<About>('/content/about'),
-  setAbout: (body: { image?: string; body: string }) =>
+  setAbout: (body: { image?: string; title: string; body: string; signature: string }) =>
     apiFetch<About>('/admin/content/about', { method: 'PUT', body }),
 
   getWhoAmI: () => apiFetch<WhoAmI>('/content/who-am-i'),
   setWhoAmI: (body: {
     bio: string
+    why: string
+    stats: Stat[]
     gridImages: string[]
     carouselImages: string[]
     quote: string
+    testimonialName: string
+    testimonialText: string
   }) => apiFetch<WhoAmI>('/admin/content/who-am-i', { method: 'PUT', body }),
 
   getLegal: () => apiFetch<Legal>('/content/legal'),

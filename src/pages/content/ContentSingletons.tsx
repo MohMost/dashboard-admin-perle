@@ -8,7 +8,6 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ImageUploadField } from '@/components/shared/ImageUploadField'
-import { MultiImageField } from '@/components/shared/MultiImageField'
 import { RichTextField } from '@/components/shared/RichTextField'
 import { contentService } from '@/services/content.service'
 import { ApiError } from '@/lib/api-client'
@@ -265,12 +264,12 @@ export function LandingEditor() {
   )
 }
 
-// "À propos" page — branded image + rich-text body.
+// "À propos" page — heading + body + closing signature (branded maroon card).
 export function AboutEditor() {
-  const [image, setImage] = useState('')
-  const [body, setBody] = useState('')
+  const [form, setForm] = useState({ image: '', title: '', body: '', signature: '' })
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const set = (k: keyof typeof form, v: string) => setForm((p) => ({ ...p, [k]: v }))
 
   useEffect(() => {
     let active = true
@@ -278,8 +277,12 @@ export function AboutEditor() {
       .getAbout()
       .then((a) => {
         if (!active) return
-        setImage(a.image ?? '')
-        setBody(a.body)
+        setForm({
+          image: a.image ?? '',
+          title: a.title ?? '',
+          body: a.body ?? '',
+          signature: a.signature ?? '',
+        })
       })
       .catch((e) => toast.error(e instanceof ApiError ? e.message : 'Erreur de chargement.'))
       .finally(() => active && setLoading(false))
@@ -291,7 +294,12 @@ export function AboutEditor() {
   const onSave = async () => {
     setSaving(true)
     try {
-      await contentService.setAbout({ image, body })
+      await contentService.setAbout({
+        image: form.image,
+        title: form.title.trim(),
+        body: form.body,
+        signature: form.signature,
+      })
       toast.success('« À propos » enregistré')
     } catch (e) {
       toast.error(e instanceof ApiError ? e.message : 'Erreur.')
@@ -314,12 +322,20 @@ export function AboutEditor() {
         ) : (
           <>
             <div className="space-y-1.5">
-              <Label>Image</Label>
-              <ImageUploadField value={image} onChange={setImage} />
+              <Label>Titre (accroche)</Label>
+              <Input value={form.title} onChange={(e) => set('title', e.target.value)} />
             </div>
             <div className="space-y-1.5">
               <Label>Contenu</Label>
-              <RichTextField value={body} onChange={setBody} />
+              <Textarea rows={12} value={form.body} onChange={(e) => set('body', e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Signature (fin de message)</Label>
+              <Textarea rows={3} value={form.signature} onChange={(e) => set('signature', e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Photo (optionnel)</Label>
+              <ImageUploadField value={form.image} onChange={(v) => set('image', v)} />
             </div>
             <div className="flex justify-end">
               <Button onClick={onSave} disabled={saving}>
@@ -334,18 +350,30 @@ export function AboutEditor() {
   )
 }
 
-// "Qui suis-je ?" page — bio + image grid + photo carousel + testimonial quote.
+// "Qui suis-je ?" page — Mon histoire, Pourquoi, Statistiques, testimonial +
+// the "mot de Ghania". Photos on the app are placeholders (not edited here).
 export function WhoAmIEditor() {
   const [form, setForm] = useState({
     bio: '',
-    gridImages: [] as string[],
-    carouselImages: [] as string[],
+    why: '',
+    stats: [] as { value: string; label: string }[],
     quote: '',
+    testimonialName: '',
+    testimonialText: '',
   })
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const set = <K extends keyof typeof form>(k: K, v: (typeof form)[K]) =>
     setForm((p) => ({ ...p, [k]: v }))
+
+  const setStat = (i: number, k: 'value' | 'label', v: string) =>
+    setForm((p) => ({
+      ...p,
+      stats: p.stats.map((s, idx) => (idx === i ? { ...s, [k]: v } : s)),
+    }))
+  const addStat = () => setForm((p) => ({ ...p, stats: [...p.stats, { value: '', label: '' }] }))
+  const removeStat = (i: number) =>
+    setForm((p) => ({ ...p, stats: p.stats.filter((_, idx) => idx !== i) }))
 
   useEffect(() => {
     let active = true
@@ -355,9 +383,11 @@ export function WhoAmIEditor() {
         if (!active) return
         setForm({
           bio: w.bio,
-          gridImages: w.gridImages ?? [],
-          carouselImages: w.carouselImages ?? [],
+          why: w.why ?? '',
+          stats: w.stats ?? [],
           quote: w.quote,
+          testimonialName: w.testimonialName ?? '',
+          testimonialText: w.testimonialText ?? '',
         })
       })
       .catch((e) => toast.error(e instanceof ApiError ? e.message : 'Erreur de chargement.'))
@@ -372,9 +402,15 @@ export function WhoAmIEditor() {
     try {
       await contentService.setWhoAmI({
         bio: form.bio.trim(),
-        gridImages: form.gridImages.filter(Boolean),
-        carouselImages: form.carouselImages.filter(Boolean),
+        why: form.why.trim(),
+        stats: form.stats
+          .map((s) => ({ value: s.value.trim(), label: s.label.trim() }))
+          .filter((s) => s.value || s.label),
+        gridImages: [],
+        carouselImages: [],
         quote: form.quote.trim(),
+        testimonialName: form.testimonialName.trim(),
+        testimonialText: form.testimonialText.trim(),
       })
       toast.success('« Qui suis-je ? » enregistré')
     } catch (e) {
@@ -389,7 +425,7 @@ export function WhoAmIEditor() {
       <CardHeader>
         <CardTitle>Qui suis-je ?</CardTitle>
         <CardDescription>
-          Votre présentation : biographie, photos et le « mot de Ghania ».
+          Votre présentation : histoire, statistiques, témoignage et le « mot de Ghania ».
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -398,26 +434,58 @@ export function WhoAmIEditor() {
         ) : (
           <>
             <div className="space-y-1.5">
-              <Label>Biographie</Label>
-              <Textarea rows={5} value={form.bio} onChange={(e) => set('bio', e.target.value)} />
+              <Label>Mon histoire</Label>
+              <Textarea rows={4} value={form.bio} onChange={(e) => set('bio', e.target.value)} />
             </div>
             <div className="space-y-1.5">
-              <Label>Galerie (grille)</Label>
-              <MultiImageField
-                value={form.gridImages}
-                onChange={(v) => set('gridImages', v)}
-              />
+              <Label>Pourquoi cette application ?</Label>
+              <Textarea rows={3} value={form.why} onChange={(e) => set('why', e.target.value)} />
             </div>
-            <div className="space-y-1.5">
-              <Label>Carrousel photos</Label>
-              <MultiImageField
-                value={form.carouselImages}
-                onChange={(v) => set('carouselImages', v)}
-              />
+            <div className="space-y-2">
+              <Label>Statistiques</Label>
+              {form.stats.map((s, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <Input
+                    className="w-32"
+                    placeholder="+3000"
+                    value={s.value}
+                    onChange={(e) => setStat(i, 'value', e.target.value)}
+                  />
+                  <Input
+                    className="flex-1"
+                    placeholder="Clientes Accompagnées"
+                    value={s.label}
+                    onChange={(e) => setStat(i, 'label', e.target.value)}
+                  />
+                  <Button variant="ghost" size="sm" onClick={() => removeStat(i)}>
+                    Retirer
+                  </Button>
+                </div>
+              ))}
+              <Button variant="outline" size="sm" onClick={addStat}>
+                Ajouter une statistique
+              </Button>
             </div>
             <div className="space-y-1.5">
               <Label>Un mot de Ghania (citation)</Label>
               <Textarea rows={3} value={form.quote} onChange={(e) => set('quote', e.target.value)} />
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label>Témoignage — nom</Label>
+                <Input
+                  value={form.testimonialName}
+                  onChange={(e) => set('testimonialName', e.target.value)}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Témoignage — texte</Label>
+                <Textarea
+                  rows={2}
+                  value={form.testimonialText}
+                  onChange={(e) => set('testimonialText', e.target.value)}
+                />
+              </div>
             </div>
             <div className="flex justify-end">
               <Button onClick={onSave} disabled={saving}>

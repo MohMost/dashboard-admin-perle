@@ -73,6 +73,11 @@ export const COLLECTIONS: CollectionDef[] = [
       },
       { name: 'isNew', label: 'Marquer comme nouveau', type: 'boolean' },
       {
+        name: 'signature',
+        label: 'Recette signature (une seule affichée en avant sur l\'accueil)',
+        type: 'boolean',
+      },
+      {
         name: 'ingredients',
         label: 'Ingrédients (une ligne par ingrédient : « nom | quantité »)',
         type: 'keyValueLines',
