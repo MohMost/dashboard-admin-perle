@@ -358,8 +358,6 @@ export function WhoAmIEditor() {
     why: '',
     stats: [] as { value: string; label: string }[],
     quote: '',
-    testimonialName: '',
-    testimonialText: '',
   })
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -386,8 +384,6 @@ export function WhoAmIEditor() {
           why: w.why ?? '',
           stats: w.stats ?? [],
           quote: w.quote,
-          testimonialName: w.testimonialName ?? '',
-          testimonialText: w.testimonialText ?? '',
         })
       })
       .catch((e) => toast.error(e instanceof ApiError ? e.message : 'Erreur de chargement.'))
@@ -409,8 +405,6 @@ export function WhoAmIEditor() {
         gridImages: [],
         carouselImages: [],
         quote: form.quote.trim(),
-        testimonialName: form.testimonialName.trim(),
-        testimonialText: form.testimonialText.trim(),
       })
       toast.success('« Qui suis-je ? » enregistré')
     } catch (e) {
@@ -470,23 +464,10 @@ export function WhoAmIEditor() {
               <Label>Un mot de Ghania (citation)</Label>
               <Textarea rows={3} value={form.quote} onChange={(e) => set('quote', e.target.value)} />
             </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-1.5">
-                <Label>Témoignage — nom</Label>
-                <Input
-                  value={form.testimonialName}
-                  onChange={(e) => set('testimonialName', e.target.value)}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Témoignage — texte</Label>
-                <Textarea
-                  rows={2}
-                  value={form.testimonialText}
-                  onChange={(e) => set('testimonialText', e.target.value)}
-                />
-              </div>
-            </div>
+            <p className="text-xs text-muted-foreground">
+              Les témoignages affichés sur « Qui suis-je ? » proviennent des avis
+              clients approuvés (onglet Avis).
+            </p>
             <div className="flex justify-end">
               <Button onClick={onSave} disabled={saving}>
                 <Save className="h-4 w-4 mr-2" />

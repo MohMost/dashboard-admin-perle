@@ -64,8 +64,6 @@ export interface WhoAmI {
   gridImages: string[]
   carouselImages: string[]
   quote: string
-  testimonialName: string
-  testimonialText: string
   updatedAt: string
 }
 export interface Legal {
@@ -145,8 +143,6 @@ export const contentService = {
     gridImages: string[]
     carouselImages: string[]
     quote: string
-    testimonialName: string
-    testimonialText: string
   }) => apiFetch<WhoAmI>('/admin/content/who-am-i', { method: 'PUT', body }),
 
   getLegal: () => apiFetch<Legal>('/content/legal'),
