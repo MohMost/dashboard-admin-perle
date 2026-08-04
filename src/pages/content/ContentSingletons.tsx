@@ -8,17 +8,24 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ImageUploadField } from '@/components/shared/ImageUploadField'
+import { MultiImageField } from '@/components/shared/MultiImageField'
 import { RichTextField } from '@/components/shared/RichTextField'
 import { contentService } from '@/services/content.service'
 import { ApiError } from '@/lib/api-client'
 
-// Welcome message singleton — shown to members on their first login (native app).
+// "Mes premiers pas" screen — intro block (title + text over the video), the
+// "Mot de Ghania" (objet + message) and the "Vos prochaines étapes" list.
 export function WelcomeMessageEditor() {
-  const [subject, setSubject] = useState('')
-  const [body, setBody] = useState('')
-  const [image, setImage] = useState('')
+  const [form, setForm] = useState({
+    introTitle: '',
+    introContent: '',
+    subject: '',
+    body: '',
+    steps: '', // one step per line
+  })
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const set = (k: keyof typeof form, v: string) => setForm((p) => ({ ...p, [k]: v }))
 
   useEffect(() => {
     let active = true
@@ -26,9 +33,13 @@ export function WelcomeMessageEditor() {
       .getWelcomeMessage()
       .then((m) => {
         if (!active) return
-        setSubject(m.subject)
-        setBody(m.body)
-        setImage(m.image ?? '')
+        setForm({
+          introTitle: m.introTitle ?? '',
+          introContent: m.introContent ?? '',
+          subject: m.subject,
+          body: m.body,
+          steps: (m.steps ?? []).join('\n'),
+        })
       })
       .catch((e) => toast.error(e instanceof ApiError ? e.message : 'Erreur de chargement.'))
       .finally(() => active && setLoading(false))
@@ -40,8 +51,17 @@ export function WelcomeMessageEditor() {
   const onSave = async () => {
     setSaving(true)
     try {
-      await contentService.setWelcomeMessage({ subject: subject.trim(), body, image })
-      toast.success("Message d'accueil enregistré")
+      await contentService.setWelcomeMessage({
+        introTitle: form.introTitle.trim(),
+        introContent: form.introContent.trim(),
+        subject: form.subject.trim(),
+        body: form.body,
+        steps: form.steps
+          .split('\n')
+          .map((s) => s.trim())
+          .filter(Boolean),
+      })
+      toast.success('« Mes premiers pas » enregistré')
     } catch (e) {
       toast.error(e instanceof ApiError ? e.message : 'Erreur.')
     } finally {
@@ -52,9 +72,10 @@ export function WelcomeMessageEditor() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Message d'accueil</CardTitle>
+        <CardTitle>Mes premiers pas</CardTitle>
         <CardDescription>
-          Affiché à vos clientes lors de leur première connexion dans l'application.
+          L'écran affiché à vos clientes après leur connexion (intro vidéo, mot de
+          Ghania et prochaines étapes).
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -63,19 +84,39 @@ export function WelcomeMessageEditor() {
         ) : (
           <>
             <div className="space-y-1.5">
-              <Label>Objet</Label>
-              <Input value={subject} onChange={(e) => setSubject(e.target.value)} />
+              <Label>Texte d'intro — titre</Label>
+              <Input
+                value={form.introTitle}
+                placeholder="Mise en service du TM7…"
+                onChange={(e) => set('introTitle', e.target.value)}
+              />
             </div>
             <div className="space-y-1.5">
-              <Label>Message</Label>
-              <Textarea rows={12} value={body} onChange={(e) => setBody(e.target.value)} />
+              <Label>Texte d'intro — contenu</Label>
+              <Textarea
+                rows={2}
+                value={form.introContent}
+                placeholder="La vidéo de mise en service de votre Thermomix TM7."
+                onChange={(e) => set('introContent', e.target.value)}
+              />
             </div>
             <div className="space-y-1.5">
-              <Label>Image (optionnel)</Label>
-              <ImageUploadField value={image} onChange={setImage} />
+              <Label>Mot de Ghania — objet</Label>
+              <Input value={form.subject} onChange={(e) => set('subject', e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Mot de Ghania — message</Label>
+              <Textarea rows={10} value={form.body} onChange={(e) => set('body', e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Vos prochaines étapes (une par ligne)</Label>
+              <Textarea rows={5} value={form.steps} onChange={(e) => set('steps', e.target.value)} />
             </div>
             <div className="flex justify-end">
-              <Button onClick={onSave} disabled={saving || !subject.trim() || !body.trim()}>
+              <Button
+                onClick={onSave}
+                disabled={saving || !form.subject.trim() || !form.body.trim()}
+              >
                 <Save className="h-4 w-4 mr-2" />
                 {saving ? 'Enregistrement…' : 'Enregistrer'}
               </Button>
@@ -264,12 +305,12 @@ export function LandingEditor() {
   )
 }
 
-// "À propos" page — heading + body + closing signature (branded maroon card).
+// "À propos" page — optional image + rich-text content.
 export function AboutEditor() {
-  const [form, setForm] = useState({ image: '', title: '', body: '', signature: '' })
+  const [image, setImage] = useState('')
+  const [body, setBody] = useState('')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const set = (k: keyof typeof form, v: string) => setForm((p) => ({ ...p, [k]: v }))
 
   useEffect(() => {
     let active = true
@@ -277,12 +318,8 @@ export function AboutEditor() {
       .getAbout()
       .then((a) => {
         if (!active) return
-        setForm({
-          image: a.image ?? '',
-          title: a.title ?? '',
-          body: a.body ?? '',
-          signature: a.signature ?? '',
-        })
+        setImage(a.image ?? '')
+        setBody(a.body ?? '')
       })
       .catch((e) => toast.error(e instanceof ApiError ? e.message : 'Erreur de chargement.'))
       .finally(() => active && setLoading(false))
@@ -294,12 +331,7 @@ export function AboutEditor() {
   const onSave = async () => {
     setSaving(true)
     try {
-      await contentService.setAbout({
-        image: form.image,
-        title: form.title.trim(),
-        body: form.body,
-        signature: form.signature,
-      })
+      await contentService.setAbout({ image, body })
       toast.success('« À propos » enregistré')
     } catch (e) {
       toast.error(e instanceof ApiError ? e.message : 'Erreur.')
@@ -322,20 +354,12 @@ export function AboutEditor() {
         ) : (
           <>
             <div className="space-y-1.5">
-              <Label>Titre (accroche)</Label>
-              <Input value={form.title} onChange={(e) => set('title', e.target.value)} />
+              <Label>Image (optionnel)</Label>
+              <ImageUploadField value={image} onChange={setImage} />
             </div>
             <div className="space-y-1.5">
               <Label>Contenu</Label>
-              <Textarea rows={12} value={form.body} onChange={(e) => set('body', e.target.value)} />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Signature (fin de message)</Label>
-              <Textarea rows={3} value={form.signature} onChange={(e) => set('signature', e.target.value)} />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Photo (optionnel)</Label>
-              <ImageUploadField value={form.image} onChange={(v) => set('image', v)} />
+              <RichTextField value={body} onChange={setBody} />
             </div>
             <div className="flex justify-end">
               <Button onClick={onSave} disabled={saving}>
@@ -355,8 +379,10 @@ export function AboutEditor() {
 export function WhoAmIEditor() {
   const [form, setForm] = useState({
     bio: '',
+    storyImage: '',
     why: '',
     stats: [] as { value: string; label: string }[],
+    carouselImages: [] as string[],
     quote: '',
   })
   const [loading, setLoading] = useState(true)
@@ -381,8 +407,10 @@ export function WhoAmIEditor() {
         if (!active) return
         setForm({
           bio: w.bio,
+          storyImage: w.storyImage ?? '',
           why: w.why ?? '',
           stats: w.stats ?? [],
+          carouselImages: w.carouselImages ?? [],
           quote: w.quote,
         })
       })
@@ -398,12 +426,13 @@ export function WhoAmIEditor() {
     try {
       await contentService.setWhoAmI({
         bio: form.bio.trim(),
+        storyImage: form.storyImage,
         why: form.why.trim(),
         stats: form.stats
           .map((s) => ({ value: s.value.trim(), label: s.label.trim() }))
           .filter((s) => s.value || s.label),
         gridImages: [],
-        carouselImages: [],
+        carouselImages: form.carouselImages.filter(Boolean),
         quote: form.quote.trim(),
       })
       toast.success('« Qui suis-je ? » enregistré')
@@ -430,6 +459,10 @@ export function WhoAmIEditor() {
             <div className="space-y-1.5">
               <Label>Mon histoire</Label>
               <Textarea rows={4} value={form.bio} onChange={(e) => set('bio', e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Image « Mon histoire »</Label>
+              <ImageUploadField value={form.storyImage} onChange={(v) => set('storyImage', v)} />
             </div>
             <div className="space-y-1.5">
               <Label>Pourquoi cette application ?</Label>
@@ -459,6 +492,13 @@ export function WhoAmIEditor() {
               <Button variant="outline" size="sm" onClick={addStat}>
                 Ajouter une statistique
               </Button>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Mes photos (carrousel)</Label>
+              <MultiImageField
+                value={form.carouselImages}
+                onChange={(v) => set('carouselImages', v)}
+              />
             </div>
             <div className="space-y-1.5">
               <Label>Un mot de Ghania (citation)</Label>

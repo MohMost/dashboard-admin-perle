@@ -16,13 +16,11 @@ import {
 } from "@tanstack/react-table";
 import { toast } from "sonner";
 import {
-  Plus,
   Search,
   Download,
   RefreshCw,
   MoreHorizontal,
   Copy,
-  Pencil,
   Ban,
   CheckCircle,
   Trash2,
@@ -30,7 +28,6 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
@@ -55,13 +52,19 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { membersService } from "@/services/members.service";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { DataTablePagination } from "@/components/shared/DataTablePagination";
-import { MemberFormDialog } from "./MemberFormDialog";
 import { formatDate, exportToCSV } from "@/lib/utils";
 import { useDebounce } from "@/hooks/use-debounce";
 import type { Member, MemberStatus } from "@/types";
@@ -75,8 +78,8 @@ export function MembersPage() {
   );
   const [sorting, setSorting] = useState<SortingState>([]);
   const [rowSelection, setRowSelection] = useState({});
-  const [formOpen, setFormOpen] = useState(false);
-  const [editMember, setEditMember] = useState<Member | null>(null);
+  // Clicking a row opens a read-only details dialog (no add/edit forms).
+  const [detailsMember, setDetailsMember] = useState<Member | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
   const { data, isLoading } = useQuery({
@@ -215,19 +218,20 @@ export function MembersPage() {
           </div>
         ),
       },
-      {
-        accessorKey: "tags",
-        header: "Tags",
-        cell: ({ row }) => (
-          <div className="flex flex-wrap gap-1">
-            {row.original.tags.map((tag) => (
-              <Badge key={tag} variant="secondary" className="text-xs">
-                {tag}
-              </Badge>
-            ))}
-          </div>
-        ),
-      },
+      // Tags column hidden for now (kept for later).
+      // {
+      //   accessorKey: "tags",
+      //   header: "Tags",
+      //   cell: ({ row }) => (
+      //     <div className="flex flex-wrap gap-1">
+      //       {row.original.tags.map((tag) => (
+      //         <Badge key={tag} variant="secondary" className="text-xs">
+      //           {tag}
+      //         </Badge>
+      //       ))}
+      //     </div>
+      //   ),
+      // },
       {
         accessorKey: "createdAt",
         header: "Inscription",
@@ -247,15 +251,6 @@ export function MembersPage() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem
-                onClick={() => {
-                  setEditMember(m);
-                  setFormOpen(true);
-                }}
-              >
-                <Pencil className="h-4 w-4 mr-2" />
-                Modifier
-              </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => {
                   navigator.clipboard.writeText(m.accessCode);
@@ -332,18 +327,9 @@ export function MembersPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Membres</h1>
           <p className="text-muted-foreground">
-            Gérez vos membres et leurs codes d'accès.
+            Cliquez sur un membre pour voir ses détails.
           </p>
         </div>
-        <Button
-          onClick={() => {
-            setEditMember(null);
-            setFormOpen(true);
-          }}
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Nouveau membre
-        </Button>
       </div>
 
       <Card>
@@ -454,9 +440,19 @@ export function MembersPage() {
                     <TableRow
                       key={row.id}
                       data-state={row.getIsSelected() ? "selected" : undefined}
+                      className="cursor-pointer"
+                      onClick={() => setDetailsMember(row.original)}
                     >
                       {row.getVisibleCells().map((cell) => (
-                        <TableCell key={cell.id}>
+                        <TableCell
+                          key={cell.id}
+                          onClick={
+                            cell.column.id === "select" ||
+                            cell.column.id === "actions"
+                              ? (e) => e.stopPropagation()
+                              : undefined
+                          }
+                        >
                           {flexRender(
                             cell.column.columnDef.cell,
                             cell.getContext(),
@@ -474,11 +470,44 @@ export function MembersPage() {
         </CardContent>
       </Card>
 
-      <MemberFormDialog
-        open={formOpen}
-        onOpenChange={setFormOpen}
-        member={editMember}
-      />
+      {/* Read-only member details (opened by clicking a row). */}
+      <Dialog
+        open={!!detailsMember}
+        onOpenChange={(o) => !o && setDetailsMember(null)}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Détails du membre</DialogTitle>
+            <DialogDescription>@{detailsMember?.username}</DialogDescription>
+          </DialogHeader>
+          {detailsMember && (
+            <div className="space-y-3 text-sm">
+              <DetailRow
+                label="Nom"
+                value={
+                  `${detailsMember.firstName ?? ""} ${detailsMember.lastName ?? ""}`.trim() ||
+                  "—"
+                }
+              />
+              <DetailRow label="Email" value={detailsMember.email || "—"} />
+              <div className="flex items-center justify-between gap-4">
+                <span className="text-muted-foreground">Statut</span>
+                <StatusBadge status={detailsMember.status} />
+              </div>
+              <div className="flex items-center justify-between gap-4">
+                <span className="text-muted-foreground">Code d'accès</span>
+                <code className="rounded bg-muted px-2 py-0.5 font-mono text-sm">
+                  {detailsMember.accessCode}
+                </code>
+              </div>
+              <DetailRow
+                label="Inscription"
+                value={formatDate(detailsMember.createdAt)}
+              />
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       <ConfirmDialog
         open={!!deleteId}
@@ -493,6 +522,15 @@ export function MembersPage() {
           }
         }}
       />
+    </div>
+  );
+}
+
+function DetailRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between gap-4">
+      <span className="text-muted-foreground">{label}</span>
+      <span className="text-right font-medium">{value}</span>
     </div>
   );
 }

@@ -15,6 +15,8 @@ export type FieldType =
   | 'richtext'
   | 'linesList'
   | 'keyValueLines'
+  | 'date' // date picker (fr) <-> "yyyy-MM-dd"
+  | 'time' // time picker <-> "HH:mm"
 
 export interface FieldDef {
   name: string
@@ -67,11 +69,10 @@ export const COLLECTIONS: CollectionDef[] = [
       { name: 'cookidooUrl', label: 'Lien Cookidoo', type: 'text' },
       {
         name: 'vimeoUrl',
-        label: 'Lien Vimeo (vidéo de la recette)',
+        label: 'Lien YouTube (vidéo de la recette)',
         type: 'text',
-        placeholder: 'https://vimeo.com/17433286?h=6bcdf4c934',
+        placeholder: 'https://youtu.be/o5r2Fu31K3Q',
       },
-      { name: 'isNew', label: 'Marquer comme nouveau', type: 'boolean' },
       {
         name: 'signature',
         label: 'Recette signature (une seule affichée en avant sur l\'accueil)',
@@ -97,18 +98,16 @@ export const COLLECTIONS: CollectionDef[] = [
     columns: [
       { header: 'Titre', accessor: (r) => str(r.title) },
       { header: 'Catégorie', accessor: (r) => str(r.category) },
-      { header: 'Durée', accessor: (r) => str(r.duration) },
     ],
     fields: [
       { name: 'title', label: 'Titre', type: 'text' },
       { name: 'image', label: 'Miniature', type: 'imageUrl' },
       { name: 'category', label: 'Catégorie', type: 'category', scope: 'video' },
-      { name: 'duration', label: 'Durée', type: 'text', placeholder: '18:42' },
       {
         name: 'vimeoUrl',
-        label: 'Lien Vimeo',
+        label: 'Lien YouTube',
         type: 'text',
-        placeholder: 'https://vimeo.com/17433286?h=6bcdf4c934',
+        placeholder: 'https://youtu.be/o5r2Fu31K3Q',
       },
       { name: 'description', label: 'Description', type: 'textarea' },
     ],
@@ -144,8 +143,8 @@ export const COLLECTIONS: CollectionDef[] = [
     fields: [
       { name: 'title', label: 'Titre', type: 'text' },
       { name: 'image', label: 'Image', type: 'imageUrl' },
-      { name: 'date', label: 'Date', type: 'text', placeholder: '2026-08-01' },
-      { name: 'time', label: 'Heure', type: 'text', placeholder: '19:30' },
+      { name: 'date', label: 'Date', type: 'date' },
+      { name: 'time', label: 'Heure', type: 'time' },
       {
         name: 'status',
         label: 'Statut',
@@ -159,9 +158,9 @@ export const COLLECTIONS: CollectionDef[] = [
       { name: 'platform', label: 'Plateforme', type: 'text', placeholder: 'Instagram Live' },
       {
         name: 'vimeoUrl',
-        label: 'Lien Vimeo (live / replay)',
+        label: 'Lien YouTube (live / replay)',
         type: 'text',
-        placeholder: 'https://vimeo.com/17433286?h=6bcdf4c934',
+        placeholder: 'https://youtu.be/o5r2Fu31K3Q',
       },
       { name: 'description', label: 'Description', type: 'textarea' },
     ],
@@ -199,8 +198,8 @@ export const EVENTS_DEF: CollectionDef = {
   ],
   fields: [
     { name: 'title', label: 'Titre', type: 'text' },
-    { name: 'date', label: 'Date', type: 'text', placeholder: '2026-08-01' },
-    { name: 'time', label: 'Heure', type: 'text', placeholder: '20:00' },
+    { name: 'date', label: 'Date', type: 'date' },
+    { name: 'time', label: 'Heure', type: 'time' },
     {
       name: 'type',
       label: 'Type',
@@ -216,12 +215,6 @@ export const EVENTS_DEF: CollectionDef = {
       name: 'remindMinutesBefore',
       label: "Rappel — minutes avant l'événement (0 = à l'heure pile)",
       type: 'number',
-    },
-    {
-      name: 'vimeoUrl',
-      label: 'Lien du live (Vimeo)',
-      type: 'text',
-      placeholder: 'https://vimeo.com/17433286?h=6bcdf4c934',
     },
     { name: 'description', label: 'Description (optionnel)', type: 'textarea' },
   ],

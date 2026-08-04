@@ -23,8 +23,11 @@ export interface Recipe {
 }
 export interface WelcomeMessage {
   id: string
+  introTitle: string
+  introContent: string
   subject: string
   body: string
+  steps: string[]
   image?: string | null
   updatedAt: string
 }
@@ -47,9 +50,7 @@ export interface Landing {
 export interface About {
   id: string
   image?: string | null
-  title: string
   body: string
-  signature: string
   updatedAt: string
 }
 export interface Stat {
@@ -59,6 +60,7 @@ export interface Stat {
 export interface WhoAmI {
   id: string
   bio: string
+  storyImage: string
   why: string
   stats: Stat[]
   gridImages: string[]
@@ -110,7 +112,13 @@ export const contentService = {
 
   // Singletons
   getWelcomeMessage: () => apiFetch<WelcomeMessage>('/content/welcome-message'),
-  setWelcomeMessage: (body: { subject: string; body: string; image?: string }) =>
+  setWelcomeMessage: (body: {
+    introTitle: string
+    introContent: string
+    subject: string
+    body: string
+    steps: string[]
+  }) =>
     apiFetch<WelcomeMessage>('/admin/content/welcome-message', {
       method: 'PUT',
       body,
@@ -132,12 +140,13 @@ export const contentService = {
   }) => apiFetch<Landing>('/admin/content/landing', { method: 'PUT', body }),
 
   getAbout: () => apiFetch<About>('/content/about'),
-  setAbout: (body: { image?: string; title: string; body: string; signature: string }) =>
+  setAbout: (body: { image?: string; body: string }) =>
     apiFetch<About>('/admin/content/about', { method: 'PUT', body }),
 
   getWhoAmI: () => apiFetch<WhoAmI>('/content/who-am-i'),
   setWhoAmI: (body: {
     bio: string
+    storyImage: string
     why: string
     stats: Stat[]
     gridImages: string[]

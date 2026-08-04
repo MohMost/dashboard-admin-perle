@@ -33,7 +33,7 @@ export function ContentPage() {
               </TabsTrigger>
             ))}
             <TabsTrigger value="landing">Écran d'accueil</TabsTrigger>
-            <TabsTrigger value="welcome">Message post-connexion</TabsTrigger>
+            <TabsTrigger value="welcome">Mes premiers pas</TabsTrigger>
             <TabsTrigger value="founder">Fondatrice</TabsTrigger>
             <TabsTrigger value="about">À propos</TabsTrigger>
             <TabsTrigger value="who-am-i">Qui suis-je</TabsTrigger>

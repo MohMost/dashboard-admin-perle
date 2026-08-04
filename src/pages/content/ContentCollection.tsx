@@ -33,6 +33,7 @@ import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { ImageUploadField } from "@/components/shared/ImageUploadField";
 import { CategoryCombobox } from "@/components/shared/CategoryCombobox";
 import { RichTextField } from "@/components/shared/RichTextField";
+import { DateField } from "@/components/shared/DateField";
 import { Skeleton } from "@/components/ui/skeleton";
 import { contentService, type ContentRecord } from "@/services/content.service";
 import type { CollectionDef, FieldDef } from "./content-config";
@@ -120,6 +121,14 @@ function Field({
         />
       ) : field.type === "richtext" ? (
         <RichTextField value={String(value)} onChange={(v) => onChange(v)} />
+      ) : field.type === "date" ? (
+        <DateField value={String(value)} onChange={(v) => onChange(v)} />
+      ) : field.type === "time" ? (
+        <Input
+          type="time"
+          value={String(value)}
+          onChange={(e) => onChange(e.target.value)}
+        />
       ) : field.type === "select" ? (
         <Select value={String(value)} onValueChange={(v) => onChange(v)}>
           <SelectTrigger>
