@@ -3,6 +3,7 @@ import {
   // LayoutDashboard, // used only by the disabled "Vue d'ensemble" analytics nav item
   // Users, // used only by the disabled "Utilisateurs" (admin users) nav item
   UserCheck, FileText, CalendarDays, Star, Settings, Sparkles, LogOut, ChevronRight,
+  Images, Bell,
 } from 'lucide-react'
 import {
   Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent,
@@ -31,6 +32,8 @@ const navItems = [
   { title: 'Contenus', href: '/dashboard/content', icon: FileText },
   { title: 'Événements', href: '/dashboard/events', icon: CalendarDays },
   { title: 'Avis clientes', href: '/dashboard/reviews', icon: Star },
+  { title: 'Médiathèque', href: '/dashboard/media', icon: Images },
+  { title: 'Notifications', href: '/dashboard/notifications', icon: Bell },
   { title: 'Paramètres', href: '/dashboard/settings', icon: Settings },
 ]
 

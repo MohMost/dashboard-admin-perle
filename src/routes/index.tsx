@@ -12,6 +12,8 @@ import { ContentPage } from '@/pages/content/ContentPage'
 import { EventsPage } from '@/pages/events/EventsPage'
 import { ReviewsPage } from '@/pages/reviews/ReviewsPage'
 import { SettingsPage } from '@/pages/settings/SettingsPage'
+import { NotificationsPage } from '@/pages/notifications/NotificationsPage'
+import { MediaPage } from '@/pages/media/MediaPage'
 import { NotFoundPage } from '@/pages/NotFoundPage'
 
 export const router = createBrowserRouter([
@@ -39,6 +41,8 @@ export const router = createBrowserRouter([
       { path: 'content', element: <ContentPage /> },
       { path: 'events', element: <EventsPage /> },
       { path: 'reviews', element: <ReviewsPage /> },
+      { path: 'media', element: <MediaPage /> },
+      { path: 'notifications', element: <NotificationsPage /> },
       { path: 'settings', element: <SettingsPage /> },
     ],
   },

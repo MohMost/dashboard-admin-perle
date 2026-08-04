@@ -1,8 +1,10 @@
 import { useRef, useState } from 'react'
 import { toast } from 'sonner'
-import { ImageUp, Loader2, X } from 'lucide-react'
+import { ImageUp, Images, Loader2, X } from 'lucide-react'
 import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
 import { apiUpload, ApiError } from '@/lib/api-client'
+import { MediaPickerDialog } from '@/components/shared/MediaPickerDialog'
 
 // Drag-and-drop image upload. Uploads the file to the admin upload endpoint and
 // stores the returned URL as the field value (a plain string, so the rest of
@@ -26,6 +28,7 @@ export function ImageUploadField({
   const inputRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
   const [dragOver, setDragOver] = useState(false)
+  const [pickerOpen, setPickerOpen] = useState(false)
 
   const upload = async (file: File) => {
     if (!file.type.startsWith('image/')) {
@@ -36,7 +39,9 @@ export function ImageUploadField({
     try {
       const form = new FormData()
       form.append('file', file)
-      const res = await apiUpload<UploadResponse>('/admin/uploads', form)
+      // Uploads go to the Firebase-backed media library, so every upload also
+      // shows up in the "Médiathèque" and can be reused elsewhere.
+      const res = await apiUpload<UploadResponse>('/admin/media', form)
       onChange(res.url)
       toast.success('Image téléversée')
     } catch (e) {
@@ -114,10 +119,26 @@ export function ImageUploadField({
           }}
         />
       </div>
+      <div className="flex items-center gap-2">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => setPickerOpen(true)}
+        >
+          <Images className="h-4 w-4 mr-2" />
+          Choisir depuis la médiathèque
+        </Button>
+      </div>
       <Input
         value={value}
         placeholder="…ou collez l'URL d'une image hébergée"
         onChange={(e) => onChange(e.target.value)}
+      />
+      <MediaPickerDialog
+        open={pickerOpen}
+        onOpenChange={setPickerOpen}
+        onSelect={(url) => onChange(url)}
       />
     </div>
   )
