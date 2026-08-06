@@ -4,7 +4,17 @@ import { Save } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { Skeleton } from '@/components/ui/skeleton'
 import { apiFetch, ApiError } from '@/lib/api-client'
 import { useSettingsStore } from '@/store/settings.store'
 import { ActivationCodeCard } from '@/pages/settings/ActivationCodeCard'
@@ -111,6 +121,173 @@ function MaxLoginAttemptsCard() {
   )
 }
 
+type Integrations = {
+  storageProvider: 'firebase' | 'cloudinary'
+  firebaseProjectId: string
+  firebaseClientEmail: string
+  firebasePrivateKey: string
+  firebaseStorageBucket: string
+  cloudinaryCloudName: string
+  cloudinaryApiKey: string
+  cloudinaryApiSecret: string
+  openaiApiKey: string
+}
+
+const EMPTY_INTEGRATIONS: Integrations = {
+  storageProvider: 'firebase',
+  firebaseProjectId: '',
+  firebaseClientEmail: '',
+  firebasePrivateKey: '',
+  firebaseStorageBucket: '',
+  cloudinaryCloudName: '',
+  cloudinaryApiKey: '',
+  cloudinaryApiSecret: '',
+  openaiApiKey: '',
+}
+
+// Intégrations — image host (Firebase / Cloudinary) + OpenAI. Stored in the DB
+// (AppSettings) so it's editable here at runtime; secrets are shown as password
+// fields. All admin-only.
+function IntegrationsSettings() {
+  const [form, setForm] = useState<Integrations>(EMPTY_INTEGRATIONS)
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const set = <K extends keyof Integrations>(k: K, v: Integrations[K]) =>
+    setForm((p) => ({ ...p, [k]: v }))
+
+  useEffect(() => {
+    let active = true
+    apiFetch<Integrations>('/settings/integrations')
+      .then((r) => active && setForm({ ...EMPTY_INTEGRATIONS, ...r }))
+      .catch((e) => toast.error(e instanceof ApiError ? e.message : 'Erreur de chargement.'))
+      .finally(() => active && setLoading(false))
+    return () => {
+      active = false
+    }
+  }, [])
+
+  const save = async () => {
+    setSaving(true)
+    try {
+      await apiFetch('/settings/integrations', { method: 'PUT', body: form })
+      toast.success('Intégrations enregistrées')
+    } catch (e) {
+      toast.error(e instanceof ApiError ? e.message : 'Erreur.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  if (loading) return <Skeleton className="h-64 w-full" />
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Hébergement des images</CardTitle>
+          <CardDescription>
+            Choisissez le service utilisé pour stocker les images téléversées.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label>Service actif</Label>
+            <Select
+              value={form.storageProvider}
+              onValueChange={(v) => set('storageProvider', v as Integrations['storageProvider'])}
+            >
+              <SelectTrigger className="w-56">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="firebase">Firebase Storage</SelectItem>
+                <SelectItem value="cloudinary">Cloudinary</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="rounded-lg border p-4 space-y-3">
+            <p className="text-sm font-medium">Firebase Storage</p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Field label="Project ID" value={form.firebaseProjectId} onChange={(v) => set('firebaseProjectId', v)} />
+              <Field label="Client email" value={form.firebaseClientEmail} onChange={(v) => set('firebaseClientEmail', v)} />
+              <Field label="Storage bucket" value={form.firebaseStorageBucket} onChange={(v) => set('firebaseStorageBucket', v)} placeholder="mon-projet.appspot.com" />
+            </div>
+            <div className="space-y-2">
+              <Label>Private key</Label>
+              <Textarea
+                rows={4}
+                className="font-mono text-xs"
+                value={form.firebasePrivateKey}
+                placeholder="-----BEGIN PRIVATE KEY-----\n…"
+                onChange={(e) => set('firebasePrivateKey', e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="rounded-lg border p-4 space-y-3">
+            <p className="text-sm font-medium">Cloudinary</p>
+            <div className="grid gap-3 sm:grid-cols-3">
+              <Field label="Cloud name" value={form.cloudinaryCloudName} onChange={(v) => set('cloudinaryCloudName', v)} />
+              <Field label="API key" type="password" value={form.cloudinaryApiKey} onChange={(v) => set('cloudinaryApiKey', v)} />
+              <Field label="API secret" type="password" value={form.cloudinaryApiSecret} onChange={(v) => set('cloudinaryApiSecret', v)} />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>OpenAI</CardTitle>
+          <CardDescription>Clé API utilisée par l'assistant de l'application.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Field
+            label="Clé API OpenAI"
+            type="password"
+            value={form.openaiApiKey}
+            onChange={(v) => set('openaiApiKey', v)}
+            placeholder="sk-…"
+          />
+        </CardContent>
+      </Card>
+
+      <div className="flex justify-end">
+        <Button onClick={save} disabled={saving}>
+          <Save className="h-4 w-4 mr-2" />
+          {saving ? 'Enregistrement…' : 'Enregistrer les intégrations'}
+        </Button>
+      </div>
+    </div>
+  )
+}
+
+function Field({
+  label,
+  value,
+  onChange,
+  type = 'text',
+  placeholder,
+}: {
+  label: string
+  value: string
+  onChange: (v: string) => void
+  type?: string
+  placeholder?: string
+}) {
+  return (
+    <div className="space-y-2">
+      <Label>{label}</Label>
+      <Input
+        type={type}
+        value={value}
+        placeholder={placeholder}
+        onChange={(e) => onChange(e.target.value)}
+      />
+    </div>
+  )
+}
+
 export function SettingsPage() {
   return (
     <div className="space-y-6">
@@ -119,9 +296,22 @@ export function SettingsPage() {
         <p className="text-muted-foreground">Configurez votre plateforme Perle de Lys.</p>
       </div>
 
-      <SupportEmailCard />
-      <ActivationCodeCard />
-      <MaxLoginAttemptsCard />
+      <Tabs defaultValue="general">
+        <TabsList>
+          <TabsTrigger value="general">Général</TabsTrigger>
+          <TabsTrigger value="integrations">Intégrations</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="general" className="mt-6 space-y-6">
+          <SupportEmailCard />
+          <ActivationCodeCard />
+          <MaxLoginAttemptsCard />
+        </TabsContent>
+
+        <TabsContent value="integrations" className="mt-6">
+          <IntegrationsSettings />
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }
