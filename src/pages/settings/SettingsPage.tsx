@@ -18,6 +18,79 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { apiFetch, ApiError } from '@/lib/api-client'
 import { useSettingsStore } from '@/store/settings.store'
 import { ActivationCodeCard } from '@/pages/settings/ActivationCodeCard'
+import { ImageUploadField } from '@/components/shared/ImageUploadField'
+import { useBranding } from '@/hooks/use-branding'
+
+// Dashboard branding — editable title + logo (shown in the sidebar / login).
+function BrandingSettings() {
+  const { refetch } = useBranding()
+  const [title, setTitle] = useState('')
+  const [logoUrl, setLogoUrl] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    let active = true
+    apiFetch<{ dashboardTitle: string; dashboardLogoUrl: string }>('/branding')
+      .then((b) => {
+        if (!active) return
+        setTitle(b.dashboardTitle)
+        setLogoUrl(b.dashboardLogoUrl)
+      })
+      .catch((e) => toast.error(e instanceof ApiError ? e.message : 'Erreur de chargement.'))
+      .finally(() => active && setLoading(false))
+    return () => {
+      active = false
+    }
+  }, [])
+
+  const save = async () => {
+    setSaving(true)
+    try {
+      await apiFetch('/settings/branding', {
+        method: 'PUT',
+        body: { dashboardTitle: title.trim(), dashboardLogoUrl: logoUrl },
+      })
+      await refetch()
+      toast.success('Apparence enregistrée')
+    } catch (e) {
+      toast.error(e instanceof ApiError ? e.message : 'Erreur.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Apparence</CardTitle>
+        <CardDescription>Le nom et le logo affichés dans le tableau de bord.</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {loading ? (
+          <Skeleton className="h-40 w-full" />
+        ) : (
+          <>
+            <div className="space-y-2">
+              <Label>Titre du tableau de bord</Label>
+              <Input value={title} onChange={(e) => setTitle(e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label>Logo (PNG, SVG…)</Label>
+              <ImageUploadField value={logoUrl} onChange={setLogoUrl} />
+            </div>
+            <div className="flex justify-end">
+              <Button onClick={save} disabled={saving || !title.trim()}>
+                <Save className="h-4 w-4 mr-2" />
+                {saving ? 'Enregistrement…' : 'Enregistrer'}
+              </Button>
+            </div>
+          </>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
 
 // Plateforme — reduced to just the support email (device-local config).
 function SupportEmailCard() {
@@ -138,6 +211,12 @@ type Integrations = {
   s3PublicUrl: string
   storageLimitGb: number
   openaiApiKey: string
+  smtpHost: string
+  smtpPort: number
+  smtpUser: string
+  smtpPassword: string
+  smtpFrom: string
+  smtpSecure: boolean
 }
 
 const EMPTY_INTEGRATIONS: Integrations = {
@@ -157,6 +236,12 @@ const EMPTY_INTEGRATIONS: Integrations = {
   s3PublicUrl: '',
   storageLimitGb: 0,
   openaiApiKey: '',
+  smtpHost: '',
+  smtpPort: 587,
+  smtpUser: '',
+  smtpPassword: '',
+  smtpFrom: '',
+  smtpSecure: false,
 }
 
 // Intégrations — image host (Firebase / Cloudinary) + OpenAI. Stored in the DB
@@ -293,17 +378,36 @@ function IntegrationsSettings() {
 
       <Card>
         <CardHeader>
-          <CardTitle>OpenAI</CardTitle>
-          <CardDescription>Clé API utilisée par l'assistant de l'application.</CardDescription>
+          <CardTitle>SMTP (emails)</CardTitle>
+          <CardDescription>
+            Serveur d'envoi d'emails — utilisé par la réinitialisation du mot de
+            passe.
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <Field
-            label="Clé API OpenAI"
-            type="password"
-            value={form.openaiApiKey}
-            onChange={(v) => set('openaiApiKey', v)}
-            placeholder="sk-…"
-          />
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Field label="Hôte SMTP" value={form.smtpHost} onChange={(v) => set('smtpHost', v)} placeholder="smtp.exemple.com" />
+            <div className="space-y-2">
+              <Label>Port</Label>
+              <Input
+                type="number"
+                value={String(form.smtpPort)}
+                onChange={(e) => set('smtpPort', Number(e.target.value) || 587)}
+              />
+            </div>
+            <Field label="Utilisateur" value={form.smtpUser} onChange={(v) => set('smtpUser', v)} />
+            <Field label="Mot de passe" type="password" value={form.smtpPassword} onChange={(v) => set('smtpPassword', v)} />
+            <Field label="Expéditeur (From)" value={form.smtpFrom} onChange={(v) => set('smtpFrom', v)} placeholder="Perle de Lys <no-reply@exemple.com>" />
+            <div className="flex items-center gap-2 pt-6">
+              <input
+                type="checkbox"
+                id="smtpSecure"
+                checked={form.smtpSecure}
+                onChange={(e) => set('smtpSecure', e.target.checked)}
+              />
+              <Label htmlFor="smtpSecure">Connexion sécurisée (SSL/TLS, port 465)</Label>
+            </div>
+          </div>
         </CardContent>
       </Card>
 
@@ -358,6 +462,7 @@ export function SettingsPage() {
         </TabsList>
 
         <TabsContent value="general" className="mt-6 space-y-6">
+          <BrandingSettings />
           <SupportEmailCard />
           <ActivationCodeCard />
           <MaxLoginAttemptsCard />

@@ -60,11 +60,17 @@ export const authService = {
     setAuthToken(null)
   },
 
-  forgotPassword: (email: string): Promise<{ message: string }> =>
-    authMock.forgotPassword(email),
+  forgotPassword: (email: string) =>
+    apiFetch<{ ok: boolean }>('/auth/forgot-password', {
+      method: 'POST',
+      body: { email },
+    }),
 
-  resetPassword: (token: string, password: string): Promise<{ message: string }> =>
-    authMock.resetPassword(token, password),
+  resetPassword: (token: string, password: string) =>
+    apiFetch<{ ok: boolean }>('/auth/reset-password', {
+      method: 'POST',
+      body: { token, password },
+    }),
 
   me: (token: string): Promise<AuthResponse['user']> => authMock.me(token),
 

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, Eye, EyeOff, Lock, Sparkles } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -15,15 +15,21 @@ export function ResetPasswordPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const token = searchParams.get('token') ?? ''
 
   const { register, handleSubmit, formState: { errors } } = useForm<ResetPasswordFormData>({
     resolver: zodResolver(resetPasswordSchema),
   })
 
   const onSubmit = async (data: ResetPasswordFormData) => {
+    if (!token) {
+      toast.error('Lien de réinitialisation invalide ou expiré.')
+      return
+    }
     setIsLoading(true)
     try {
-      await authService.resetPassword('mock-token', data.password)
+      await authService.resetPassword(token, data.password)
       toast.success('Mot de passe réinitialisé avec succès')
       navigate('/login')
     } catch (err) {

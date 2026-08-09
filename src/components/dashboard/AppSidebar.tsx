@@ -18,6 +18,7 @@ import { getInitials } from '@/lib/utils'
 import { ROLES } from '@/lib/constants'
 import { ModeToggle } from '@/components/mode-toggle'
 import { AdminProfileDialog } from '@/components/dashboard/AdminProfileDialog'
+import { useBranding } from '@/hooks/use-branding'
 
 const navItems = [
   // Analytics overview ("Vue d'ensemble") removed at client request (2026-07-18)
@@ -40,6 +41,7 @@ const navItems = [
 export function AppSidebar() {
   const location = useLocation()
   const { user, logout } = useAuthStore()
+  const { data: branding } = useBranding()
   const [profileOpen, setProfileOpen] = useState(false)
 
   const isActive = (href: string) => {
@@ -54,11 +56,21 @@ export function AppSidebar() {
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
               <Link to="/dashboard">
-                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-foreground text-background shrink-0">
-                  <Sparkles className="size-4" />
+                <div className="flex aspect-square size-8 items-center justify-center overflow-hidden rounded-lg bg-foreground text-background shrink-0">
+                  {branding?.dashboardLogoUrl ? (
+                    <img
+                      src={branding.dashboardLogoUrl}
+                      alt=""
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <Sparkles className="size-4" />
+                  )}
                 </div>
                 <div className="flex flex-col gap-0.5 leading-none">
-                  <span className="font-semibold text-sm">Perle de Lys</span>
+                  <span className="font-semibold text-sm">
+                    {branding?.dashboardTitle || 'Perle de Lys'}
+                  </span>
                   <span className="text-xs text-muted-foreground">Administration</span>
                 </div>
               </Link>
