@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { ImageUp, Images, Loader2, X } from 'lucide-react'
 import { Input } from '@/components/ui/input'
@@ -16,7 +17,9 @@ interface UploadResponse {
   url: string
 }
 
-const ACCEPT = 'image/jpeg,image/png,image/webp,image/gif'
+const ACCEPT = 'image/png,image/webp,image/jpeg'
+const ACCEPTED_TYPES = ['image/png', 'image/webp', 'image/jpeg']
+const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5 Mo
 
 export function ImageUploadField({
   value,
@@ -25,14 +28,19 @@ export function ImageUploadField({
   value: string
   onChange: (url: string) => void
 }) {
+  const queryClient = useQueryClient()
   const inputRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
   const [dragOver, setDragOver] = useState(false)
   const [pickerOpen, setPickerOpen] = useState(false)
 
   const upload = async (file: File) => {
-    if (!file.type.startsWith('image/')) {
-      toast.error('Veuillez déposer une image.')
+    if (!ACCEPTED_TYPES.includes(file.type)) {
+      toast.error('Format non supporté (PNG, WebP ou JPEG).')
+      return
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      toast.error('Image trop volumineuse (max 5 Mo).')
       return
     }
     setUploading(true)
@@ -40,8 +48,11 @@ export function ImageUploadField({
       const form = new FormData()
       form.append('file', file)
       // Uploads go to the Firebase-backed media library, so every upload also
-      // shows up in the "Médiathèque" and can be reused elsewhere.
+      // shows up in the "Médiathèque" and can be reused elsewhere. Refresh the
+      // library + usage bar so the Médiathèque reflects the new image.
       const res = await apiUpload<UploadResponse>('/admin/media', form)
+      queryClient.invalidateQueries({ queryKey: ['media'] })
+      queryClient.invalidateQueries({ queryKey: ['media-usage'] })
       onChange(res.url)
       toast.success('Image téléversée')
     } catch (e) {
