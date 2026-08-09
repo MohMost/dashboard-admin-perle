@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { ImageUp, Loader2, Trash2 } from 'lucide-react'
+import { ImageUp, Loader2 } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
@@ -120,27 +120,16 @@ export function MediaPage() {
               Aucune image pour le moment.
             </p>
           ) : (
-            <div className="grid grid-cols-3 gap-3 sm:grid-cols-5">
-              {items.map((m) => (
-                <div
-                  key={m.id}
-                  className="relative aspect-square overflow-hidden rounded-md border"
-                >
-                  <a href={m.url} target="_blank" rel="noreferrer">
-                    <img src={m.url} alt="" className="h-full w-full object-cover" />
-                  </a>
-                  {/* Always visible (no hover) so it works on touch screens. */}
-                  <button
-                    type="button"
-                    onClick={() => setDeleteId(m.id)}
-                    aria-label="Supprimer l'image"
-                    className="absolute right-1.5 top-1.5 rounded-full bg-background/90 p-1.5 text-destructive shadow hover:bg-destructive hover:text-destructive-foreground"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </div>
-              ))}
-            </div>
+            <>
+              <p className="mb-3 text-xs text-muted-foreground">
+                Astuce : maintenez une image appuyée pour la supprimer.
+              </p>
+              <div className="grid grid-cols-3 gap-3 sm:grid-cols-5">
+                {items.map((m) => (
+                  <MediaTile key={m.id} url={m.url} onLongPress={() => setDeleteId(m.id)} />
+                ))}
+              </div>
+            </>
           )}
         </CardContent>
       </Card>
@@ -157,6 +146,51 @@ export function MediaPage() {
             setDeleteId(null)
           }
         }}
+      />
+    </div>
+  )
+}
+
+// A media thumbnail. Press-and-hold (≥500ms, mouse or touch) triggers delete;
+// a normal tap/click opens the image in a new tab.
+function MediaTile({ url, onLongPress }: { url: string; onLongPress: () => void }) {
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const fired = useRef(false)
+
+  const start = () => {
+    fired.current = false
+    timer.current = setTimeout(() => {
+      fired.current = true
+      onLongPress()
+    }, 500)
+  }
+  const cancel = () => {
+    if (timer.current) {
+      clearTimeout(timer.current)
+      timer.current = null
+    }
+  }
+
+  return (
+    <div
+      className="relative aspect-square cursor-pointer select-none overflow-hidden rounded-md border"
+      title="Maintenez pour supprimer"
+      onPointerDown={start}
+      onPointerUp={cancel}
+      onPointerLeave={cancel}
+      onPointerCancel={cancel}
+      onContextMenu={(e) => e.preventDefault()}
+      onClick={() => {
+        // Don't open the image if the press was a long-press (delete intent).
+        if (fired.current) return
+        window.open(url, '_blank', 'noopener,noreferrer')
+      }}
+    >
+      <img
+        src={url}
+        alt=""
+        draggable={false}
+        className="pointer-events-none h-full w-full object-cover"
       />
     </div>
   )
