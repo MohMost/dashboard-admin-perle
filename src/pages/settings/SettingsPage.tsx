@@ -214,7 +214,7 @@ function IntegrationsSettings() {
               <SelectContent>
                 <SelectItem value="firebase">Firebase Storage</SelectItem>
                 <SelectItem value="cloudinary">Cloudinary</SelectItem>
-                <SelectItem value="s3">S3 (compatible)</SelectItem>
+                <SelectItem value="s3">IONOS / S3 compatible</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -254,15 +254,20 @@ function IntegrationsSettings() {
 
           {form.storageProvider === 's3' && (
             <div className="rounded-lg border p-4 space-y-3">
-              <p className="text-sm font-medium">S3 (compatible)</p>
+              <p className="text-sm font-medium">IONOS Object Storage (S3 compatible)</p>
               <div className="grid gap-3 sm:grid-cols-2">
                 <Field label="Bucket" value={form.s3Bucket} onChange={(v) => set('s3Bucket', v)} />
-                <Field label="Région" value={form.s3Region} onChange={(v) => set('s3Region', v)} placeholder="us-east-1" />
+                <Field label="Région" value={form.s3Region} onChange={(v) => set('s3Region', v)} placeholder="eu-central-1" />
                 <Field label="Access key ID" type="password" value={form.s3AccessKeyId} onChange={(v) => set('s3AccessKeyId', v)} />
                 <Field label="Secret access key" type="password" value={form.s3SecretAccessKey} onChange={(v) => set('s3SecretAccessKey', v)} />
-                <Field label="Endpoint (vide = AWS)" value={form.s3Endpoint} onChange={(v) => set('s3Endpoint', v)} placeholder="https://s3.eu-west-1.amazonaws.com" />
-                <Field label="URL publique / CDN (optionnel)" value={form.s3PublicUrl} onChange={(v) => set('s3PublicUrl', v)} placeholder="https://cdn.mon-domaine.com" />
+                <Field label="Endpoint" value={form.s3Endpoint} onChange={(v) => set('s3Endpoint', v)} placeholder="https://s3-eu-central-1.ionoscloud.com" />
+                <Field label="URL publique / CDN (optionnel)" value={form.s3PublicUrl} onChange={(v) => set('s3PublicUrl', v)} placeholder="laisser vide pour l'URL du bucket" />
               </div>
+              <p className="text-xs text-muted-foreground">
+                IONOS : renseignez l'endpoint de votre région (ex.
+                <code className="mx-1">https://s3-eu-central-1.ionoscloud.com</code>)
+                et créez une clé S3 dans « Key Management » de la console IONOS.
+              </p>
             </div>
           )}
         </CardContent>
