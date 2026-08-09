@@ -124,16 +124,17 @@ export function MediaPage() {
               {items.map((m) => (
                 <div
                   key={m.id}
-                  className="group relative aspect-square overflow-hidden rounded-md border"
+                  className="relative aspect-square overflow-hidden rounded-md border"
                 >
                   <a href={m.url} target="_blank" rel="noreferrer">
                     <img src={m.url} alt="" className="h-full w-full object-cover" />
                   </a>
+                  {/* Always visible (no hover) so it works on touch screens. */}
                   <button
                     type="button"
                     onClick={() => setDeleteId(m.id)}
                     aria-label="Supprimer l'image"
-                    className="absolute right-1.5 top-1.5 rounded-full bg-background/90 p-1.5 text-muted-foreground opacity-0 shadow transition-opacity hover:text-destructive group-hover:opacity-100"
+                    className="absolute right-1.5 top-1.5 rounded-full bg-background/90 p-1.5 text-destructive shadow hover:bg-destructive hover:text-destructive-foreground"
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>
