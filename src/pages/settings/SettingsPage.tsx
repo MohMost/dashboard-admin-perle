@@ -136,6 +136,7 @@ type Integrations = {
   s3AccessKeyId: string
   s3SecretAccessKey: string
   s3PublicUrl: string
+  storageLimitGb: number
   openaiApiKey: string
 }
 
@@ -154,6 +155,7 @@ const EMPTY_INTEGRATIONS: Integrations = {
   s3AccessKeyId: '',
   s3SecretAccessKey: '',
   s3PublicUrl: '',
+  storageLimitGb: 0,
   openaiApiKey: '',
 }
 
@@ -270,6 +272,22 @@ function IntegrationsSettings() {
               </p>
             </div>
           )}
+
+          <div className="space-y-2 border-t pt-4">
+            <Label>Limite de stockage (Go)</Label>
+            <Input
+              type="number"
+              min={0}
+              className="w-40"
+              value={String(form.storageLimitGb)}
+              onChange={(e) => set('storageLimitGb', Number(e.target.value) || 0)}
+            />
+            <p className="text-xs text-muted-foreground">
+              Sert à la barre d'usage (Médiathèque) pour IONOS / Firebase —
+              0 = aucune limite. Cloudinary affiche automatiquement sa propre
+              limite.
+            </p>
+          </div>
         </CardContent>
       </Card>
 

@@ -23,10 +23,16 @@ export function MediaPage() {
   })
   const items = data ?? []
 
+  const { data: usage } = useQuery({
+    queryKey: ['media-usage'],
+    queryFn: mediaService.usage,
+  })
+
   const deleteMutation = useMutation({
     mutationFn: (id: string) => mediaService.remove(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['media'] })
+      queryClient.invalidateQueries({ queryKey: ['media-usage'] })
       toast.success('Image supprimée')
     },
     onError: (e) =>
@@ -41,6 +47,7 @@ export function MediaPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['media'] })
+      queryClient.invalidateQueries({ queryKey: ['media-usage'] })
       toast.success('Image ajoutée à la médiathèque')
     },
     onError: (e) =>
@@ -65,6 +72,38 @@ export function MediaPage() {
           partout.
         </p>
       </div>
+
+      {usage && (
+        <Card>
+          <CardContent className="space-y-2 p-4">
+            <div className="flex items-center justify-between text-sm">
+              <span className="font-medium">
+                Stockage utilisé
+                {usage.plan ? ` · ${usage.plan}` : ''}
+              </span>
+              <span className="text-muted-foreground">
+                {formatBytes(usage.usedBytes)}
+                {usage.limitBytes ? ` / ${formatBytes(usage.limitBytes)}` : ''}
+              </span>
+            </div>
+            {usage.limitBytes || usage.usedPercent != null ? (
+              <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+                <div
+                  className={`h-full rounded-full ${
+                    (usage.usedPercent ?? 0) >= 90 ? 'bg-destructive' : 'bg-primary'
+                  }`}
+                  style={{ width: `${Math.min(100, usage.usedPercent ?? 0)}%` }}
+                />
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground">
+                Aucune limite définie — indiquez-en une dans Paramètres →
+                Intégrations pour suivre le quota.
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       <div
         role="button"
@@ -149,6 +188,13 @@ export function MediaPage() {
       />
     </div>
   )
+}
+
+function formatBytes(bytes: number): string {
+  if (!bytes) return '0 Mo'
+  const gb = bytes / 1_000_000_000
+  if (gb >= 1) return `${gb.toFixed(2)} Go`
+  return `${(bytes / 1_000_000).toFixed(1)} Mo`
 }
 
 // A media thumbnail. Press-and-hold (≥500ms, mouse or touch) triggers delete;
