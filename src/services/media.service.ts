@@ -11,4 +11,6 @@ export interface Media {
 export const mediaService = {
   list: () => apiFetch<Media[]>('/admin/media'),
   upload: (form: FormData) => apiUpload<Media>('/admin/media', form),
+  remove: (id: string) =>
+    apiFetch<void>(`/admin/media/${id}`, { method: 'DELETE' }),
 }

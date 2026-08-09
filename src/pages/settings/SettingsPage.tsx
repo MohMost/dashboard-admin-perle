@@ -122,7 +122,7 @@ function MaxLoginAttemptsCard() {
 }
 
 type Integrations = {
-  storageProvider: 'firebase' | 'cloudinary'
+  storageProvider: 'firebase' | 'cloudinary' | 's3'
   firebaseProjectId: string
   firebaseClientEmail: string
   firebasePrivateKey: string
@@ -130,6 +130,12 @@ type Integrations = {
   cloudinaryCloudName: string
   cloudinaryApiKey: string
   cloudinaryApiSecret: string
+  s3Endpoint: string
+  s3Region: string
+  s3Bucket: string
+  s3AccessKeyId: string
+  s3SecretAccessKey: string
+  s3PublicUrl: string
   openaiApiKey: string
 }
 
@@ -137,11 +143,17 @@ const EMPTY_INTEGRATIONS: Integrations = {
   storageProvider: 'firebase',
   firebaseProjectId: '',
   firebaseClientEmail: '',
-  firebasePrivateKey: '',
   firebaseStorageBucket: '',
+  firebasePrivateKey: '',
   cloudinaryCloudName: '',
   cloudinaryApiKey: '',
   cloudinaryApiSecret: '',
+  s3Endpoint: '',
+  s3Region: '',
+  s3Bucket: '',
+  s3AccessKeyId: '',
+  s3SecretAccessKey: '',
+  s3PublicUrl: '',
   openaiApiKey: '',
 }
 
@@ -202,37 +214,57 @@ function IntegrationsSettings() {
               <SelectContent>
                 <SelectItem value="firebase">Firebase Storage</SelectItem>
                 <SelectItem value="cloudinary">Cloudinary</SelectItem>
+                <SelectItem value="s3">S3 (compatible)</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
-          <div className="rounded-lg border p-4 space-y-3">
-            <p className="text-sm font-medium">Firebase Storage</p>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <Field label="Project ID" value={form.firebaseProjectId} onChange={(v) => set('firebaseProjectId', v)} />
-              <Field label="Client email" value={form.firebaseClientEmail} onChange={(v) => set('firebaseClientEmail', v)} />
-              <Field label="Storage bucket" value={form.firebaseStorageBucket} onChange={(v) => set('firebaseStorageBucket', v)} placeholder="mon-projet.appspot.com" />
+          {/* Only the selected provider's credentials are shown. */}
+          {form.storageProvider === 'firebase' && (
+            <div className="rounded-lg border p-4 space-y-3">
+              <p className="text-sm font-medium">Firebase Storage</p>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <Field label="Project ID" value={form.firebaseProjectId} onChange={(v) => set('firebaseProjectId', v)} />
+                <Field label="Client email" value={form.firebaseClientEmail} onChange={(v) => set('firebaseClientEmail', v)} />
+                <Field label="Storage bucket" value={form.firebaseStorageBucket} onChange={(v) => set('firebaseStorageBucket', v)} placeholder="mon-projet.appspot.com" />
+              </div>
+              <div className="space-y-2">
+                <Label>Private key</Label>
+                <Textarea
+                  rows={4}
+                  className="font-mono text-xs"
+                  value={form.firebasePrivateKey}
+                  placeholder="-----BEGIN PRIVATE KEY-----\n…"
+                  onChange={(e) => set('firebasePrivateKey', e.target.value)}
+                />
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label>Private key</Label>
-              <Textarea
-                rows={4}
-                className="font-mono text-xs"
-                value={form.firebasePrivateKey}
-                placeholder="-----BEGIN PRIVATE KEY-----\n…"
-                onChange={(e) => set('firebasePrivateKey', e.target.value)}
-              />
-            </div>
-          </div>
+          )}
 
-          <div className="rounded-lg border p-4 space-y-3">
-            <p className="text-sm font-medium">Cloudinary</p>
-            <div className="grid gap-3 sm:grid-cols-3">
-              <Field label="Cloud name" value={form.cloudinaryCloudName} onChange={(v) => set('cloudinaryCloudName', v)} />
-              <Field label="API key" type="password" value={form.cloudinaryApiKey} onChange={(v) => set('cloudinaryApiKey', v)} />
-              <Field label="API secret" type="password" value={form.cloudinaryApiSecret} onChange={(v) => set('cloudinaryApiSecret', v)} />
+          {form.storageProvider === 'cloudinary' && (
+            <div className="rounded-lg border p-4 space-y-3">
+              <p className="text-sm font-medium">Cloudinary</p>
+              <div className="grid gap-3 sm:grid-cols-3">
+                <Field label="Cloud name" value={form.cloudinaryCloudName} onChange={(v) => set('cloudinaryCloudName', v)} />
+                <Field label="API key" type="password" value={form.cloudinaryApiKey} onChange={(v) => set('cloudinaryApiKey', v)} />
+                <Field label="API secret" type="password" value={form.cloudinaryApiSecret} onChange={(v) => set('cloudinaryApiSecret', v)} />
+              </div>
             </div>
-          </div>
+          )}
+
+          {form.storageProvider === 's3' && (
+            <div className="rounded-lg border p-4 space-y-3">
+              <p className="text-sm font-medium">S3 (compatible)</p>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <Field label="Bucket" value={form.s3Bucket} onChange={(v) => set('s3Bucket', v)} />
+                <Field label="Région" value={form.s3Region} onChange={(v) => set('s3Region', v)} placeholder="us-east-1" />
+                <Field label="Access key ID" type="password" value={form.s3AccessKeyId} onChange={(v) => set('s3AccessKeyId', v)} />
+                <Field label="Secret access key" type="password" value={form.s3SecretAccessKey} onChange={(v) => set('s3SecretAccessKey', v)} />
+                <Field label="Endpoint (vide = AWS)" value={form.s3Endpoint} onChange={(v) => set('s3Endpoint', v)} placeholder="https://s3.eu-west-1.amazonaws.com" />
+                <Field label="URL publique / CDN (optionnel)" value={form.s3PublicUrl} onChange={(v) => set('s3PublicUrl', v)} placeholder="https://cdn.mon-domaine.com" />
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
