@@ -378,6 +378,22 @@ function IntegrationsSettings() {
 
       <Card>
         <CardHeader>
+          <CardTitle>OpenAI</CardTitle>
+          <CardDescription>Clé API utilisée par l'assistant de l'application.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Field
+            label="Clé API OpenAI"
+            type="password"
+            value={form.openaiApiKey}
+            onChange={(v) => set('openaiApiKey', v)}
+            placeholder="sk-…"
+          />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
           <CardTitle>SMTP (emails)</CardTitle>
           <CardDescription>
             Serveur d'envoi d'emails — utilisé par la réinitialisation du mot de
